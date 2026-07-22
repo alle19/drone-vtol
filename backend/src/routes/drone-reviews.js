@@ -1,10 +1,8 @@
-// backend/src/routes/drone-reviews.js
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const pool = require('../db');
 const { authenticate } = require('../middleware/auth');
 
-// GET /api/drones/:droneId/reviews
 router.get('/', async (req, res) => {
   try {
     const { droneId } = req.params;
@@ -24,7 +22,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/drones/:droneId/reviews — any logged-in user, one review per drone
 router.post('/', authenticate, async (req, res) => {
   try {
     const { droneId } = req.params;

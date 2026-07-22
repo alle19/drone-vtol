@@ -1,10 +1,8 @@
-// backend/src/routes/articles.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { authenticate, authorize, optionalAuthenticate } = require('../middleware/auth');
 
-// GET /api/articles — public, published only, filterable
 router.get('/', async (req, res) => {
   try {
     const { category, related_drone_id, related_firm_id } = req.query;
@@ -37,8 +35,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/articles/all — editor/admin only, every article regardless of status
-// NOTE: this must stay above the /:slug route below, or Express would treat "all" as a slug.
 router.get('/all', authenticate, authorize('editor', 'admin'), async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM articles ORDER BY created_at DESC');
@@ -49,7 +45,6 @@ router.get('/all', authenticate, authorize('editor', 'admin'), async (req, res) 
   }
 });
 
-// GET /api/articles/:slug — public if published; editor/admin can preview their drafts
 router.get('/:slug', optionalAuthenticate, async (req, res) => {
   try {
     const { slug } = req.params;
@@ -73,7 +68,6 @@ router.get('/:slug', optionalAuthenticate, async (req, res) => {
   }
 });
 
-// POST /api/articles — editor/admin only
 router.post('/', authenticate, authorize('editor', 'admin'), async (req, res) => {
   try {
     const { title, slug, body, category, featured_image_url, related_drone_id, related_firm_id, status } = req.body;
@@ -112,7 +106,6 @@ router.post('/', authenticate, authorize('editor', 'admin'), async (req, res) =>
   }
 });
 
-// PATCH /api/articles/:id — editor can edit only their own; admin can edit any
 router.patch('/:id', authenticate, authorize('editor', 'admin'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -132,7 +125,6 @@ router.patch('/:id', authenticate, authorize('editor', 'admin'), async (req, res
 
     const { title, body, category, featured_image_url, related_drone_id, related_firm_id, status } = req.body;
 
-    // Stamp published_at the moment status transitions into 'published' for the first time
     let publishedAt = article.published_at;
     if (status === 'published' && article.status !== 'published') {
       publishedAt = new Date();

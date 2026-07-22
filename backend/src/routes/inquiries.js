@@ -1,10 +1,8 @@
-// backend/src/routes/inquiries.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { authenticate } = require('../middleware/auth');
 
-// POST /api/inquiries — any logged-in user, submitted to a firm (optionally about a specific drone)
 router.post('/', authenticate, async (req, res) => {
   try {
     const { firm_id, drone_id, message } = req.body;
@@ -41,7 +39,6 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/inquiries — admin: all · firm_owner: their firm's · regular user: their own submissions
 router.get('/', authenticate, async (req, res) => {
   try {
     let result;
@@ -61,7 +58,6 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/inquiries/:id — firm_owner of that firm, or admin, updates status
 router.patch('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;

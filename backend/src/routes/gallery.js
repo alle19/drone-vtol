@@ -1,10 +1,8 @@
-// backend/src/routes/gallery.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { authenticate, authorize } = require('../middleware/auth');
 
-// GET /api/gallery?category=&drone_id=&firm_id=
 router.get('/', async (req, res) => {
   try {
     const { category, drone_id, firm_id } = req.query;
@@ -43,7 +41,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/gallery/:id
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,7 +64,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/gallery — admin/editor only
 router.post('/', authenticate, authorize('admin', 'editor'), async (req, res) => {
   try {
     const { title, description, media_url, media_type, category, drone_id, firm_id } = req.body;

@@ -1,10 +1,8 @@
-// backend/src/routes/firms.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const { authenticate } = require('../middleware/auth');
 
-// GET /api/firms
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM firms ORDER BY created_at DESC');
@@ -15,7 +13,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/firms/:id
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -32,9 +29,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/firms
-// A 'user' with no firm yet becomes firm_owner of the firm they create.
-// An 'admin' can create a firm without being tied to it.
 router.post('/', authenticate, async (req, res) => {
   try {
     const { name, slug, description, logo_url, website_url, contact_email, contact_phone, location } = req.body;
@@ -82,9 +76,6 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/firms/:id
-// Only the firm's own firm_owner, or an admin, can update it.
-// Only an admin can change `verified` — a firm cannot self-verify.
 router.patch('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;

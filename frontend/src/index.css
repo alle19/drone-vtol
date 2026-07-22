@@ -1,0 +1,22 @@
+/* src/index.css */
+@import "tailwindcss";
+
+@theme {
+  --color-altitude-950: #0B1220;
+  --color-altitude-800: #16233B;
+  --color-horizon-100: #EFF3F7;
+  --color-beacon: #FF6A1A;
+  --color-telemetry: #4FD1E8;
+  --color-ink: #0B1220;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

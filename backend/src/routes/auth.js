@@ -1,4 +1,3 @@
-// backend/src/routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -7,7 +6,6 @@ const pool = require('../db');
 const { authenticate } = require('../middleware/auth');
 
 function signToken(user) {
-  // No expiresIn set on purpose — token does not expire
   return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
 }
 
@@ -16,7 +14,6 @@ function publicUser(user) {
   return safe;
 }
 
-// POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -32,7 +29,6 @@ router.post('/signup', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // role is always forced to 'user' here — no self-assigned admin/editor/firm_owner
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, name, role)
        VALUES ($1, $2, $3, 'user') RETURNING *`,
@@ -49,7 +45,6 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -78,7 +73,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/me
 router.get('/me', authenticate, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);

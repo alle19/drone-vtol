@@ -1,4 +1,3 @@
-// backend/src/routes/drones.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
@@ -10,7 +9,6 @@ const SORT_OPTIONS = {
   newest: 'created_at DESC',
 };
 
-// GET /api/drones?category=&firm_id=&min_price=&max_price=&min_flight_time=&min_range=&sort=
 router.get('/', async (req, res) => {
   try {
     const { category, firm_id, min_price, max_price, min_flight_time, min_range, sort } = req.query;
@@ -54,7 +52,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/drones/:id  — includes aggregate rating from drone_reviews
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -78,9 +75,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/drones
-// firm_owner: creates under their own firm (any firm_id sent in the body is ignored).
-// admin: must supply firm_id explicitly.
 router.post('/', authenticate, async (req, res) => {
   try {
     if (req.user.role !== 'firm_owner' && req.user.role !== 'admin') {
@@ -138,7 +132,6 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/drones/:id
 router.patch('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;

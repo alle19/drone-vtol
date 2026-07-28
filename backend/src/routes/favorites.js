@@ -1,4 +1,3 @@
-// backend/src/routes/favorites.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
@@ -10,7 +9,6 @@ const TABLE_BY_TYPE = {
   firm: { table: 'firms', titleCol: 'name', imageCol: 'logo_url' },
 };
 
-// POST /api/favorites — toggles a favorite on/off, returns the resulting state
 router.post('/', authenticate, async (req, res) => {
   try {
     const { item_type, item_id } = req.body;
@@ -43,7 +41,6 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/favorites — current user's favorites, enriched with title/image per item
 router.get('/', authenticate, async (req, res) => {
   try {
     const favoritesResult = await pool.query('SELECT * FROM favorites WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
@@ -58,7 +55,7 @@ router.get('/', authenticate, async (req, res) => {
       detailMaps[type] = {};
       if (ids.length > 0) {
         const result = await pool.query(
-          `SELECT id, ${titleCol} AS title, ${imageCol} AS image_url FROM ${table} WHERE id = ANY($1)`,
+          `SELECT id, ${titleCol} AS title, ${imageCol} AS image_url, slug FROM ${table} WHERE id = ANY($1)`,
           [ids]
         );
         result.rows.forEach((row) => {

@@ -1,8 +1,7 @@
-// backend/src/seed.js
 const bcrypt = require('bcryptjs');
 const pool = require('./db');
 
-const SEED_PASSWORD = 'TestPass123!'; // dev-only — every seeded user shares this
+const SEED_PASSWORD = 'TestPass123!'; 
 
 async function resetTables() {
   await pool.query(`
@@ -28,7 +27,7 @@ async function seedFirms() {
     );
     ids.push(result.rows[0].id);
   }
-  return ids; // [aerofirm, skybridge, meridian, vantage]
+  return ids; 
 }
 
 async function seedUsers(firmIds) {
@@ -56,7 +55,7 @@ async function seedUsers(firmIds) {
     );
     ids.push(result.rows[0].id);
   }
-  return ids; // [admin, editor, aerofirmOwner, skybridgeOwner, meridianOwner, vantageOwner, reader1, reader2, reader3]
+  return ids; 
 }
 
 async function seedDrones(firmIds) {
@@ -82,7 +81,7 @@ async function seedDrones(firmIds) {
     );
     ids.push(result.rows[0].id);
   }
-  return ids; // [falcon2, falcon1scout, voyager, sentinel, mapperone, ranger, inspectorx, horizon]
+  return ids; 
 }
 
 async function seedArticles(userIds, droneIds, firmIds) {
@@ -120,7 +119,7 @@ async function seedGalleryItems(droneIds, firmIds) {
     { title: 'City Infrastructure Mapping', description: 'MapperOne building a 3D model of a city block for planning review.', media_url: 'https://example.com/media/city-mapping.jpg', media_type: 'image', category: 'mapping', drone_id: mapperone, firm_id: meridian },
     { title: 'Night Surveillance Patrol', description: 'Meridian Ranger on a perimeter patrol using its zoom gimbal at dusk.', media_url: 'https://example.com/media/night-patrol.mp4', media_type: 'video', category: 'surveillance', drone_id: ranger, firm_id: meridian },
     { title: 'Powerline Corridor Inspection', description: 'Vantage Inspector-X scanning a powerline corridor with onboard LiDAR.', media_url: 'https://example.com/media/powerline-inspection.jpg', media_type: 'image', category: 'inspection', drone_id: inspectorx, firm_id: vantage },
-    { title: '#SkyWithoutRunways Launch Event', description: 'Community turnout for the campaign launch, watching a live VTOL transition demo.', media_url: 'https://example.com/media/launch-event.jpg', media_type: 'image', category: 'campaign', drone_id: null, firm_id: null },
+    { title: '#PunctulDeZbor Launch Event', description: 'Community turnout for the campaign launch, watching a live VTOL transition demo.', media_url: 'https://example.com/media/launch-event.jpg', media_type: 'image', category: 'campaign', drone_id: null, firm_id: null },
     { title: 'Community Demo Day — Local Farmers', description: 'Local farmers trying out VTOL flight-planning software during a hands-on demo day.', media_url: 'https://example.com/media/demo-day-farmers.jpg', media_type: 'image', category: 'campaign', drone_id: null, firm_id: null },
   ];
 

@@ -67,7 +67,15 @@ router.patch('/:id', authenticate, async (req, res) => {
       return res.status(400).json({ error: "status must be 'new', 'contacted', or 'closed'" });
     }
 
-    const result = await pool.query('UPDATE inquiries SET status = $1 WHERE id = $2 RETURNING *', [status, id]);
+    let contactedAt = inquiry.contacted_at;
+    if (status === 'contacted' && !inquiry.contacted_at) {
+      contactedAt = new Date();
+    }
+
+    const result = await pool.query(
+      'UPDATE inquiries SET status = $1, contacted_at = $2 WHERE id = $3 RETURNING *',
+      [status, contactedAt, id]
+    );
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);

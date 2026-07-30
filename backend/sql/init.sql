@@ -98,6 +98,7 @@ CREATE TABLE inquiries (
     drone_id INTEGER REFERENCES drones(id) ON DELETE SET NULL,
     message TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'closed')),
+    contacted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Nav from './components/Nav.jsx';
+import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/account" element={<Account />} />
         </Routes>
       </main>
+      <Footer />
     </div>
   );
 }

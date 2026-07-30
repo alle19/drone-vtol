@@ -1,14 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import BrandLogo from './BrandLogo.jsx';
 
 export default function Nav() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="border-b border-neutral-200 bg-white">
+    <header className="border-b border-neutral-200 bg-white/90 backdrop-blur">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="font-semibold text-lg tracking-tight">PunctulDeZbor</Link>
+          <Link to="/" className="flex items-center gap-3">
+            <BrandLogo className="h-9" />
+            <span className="font-semibold text-lg tracking-tight text-neutral-900">PunctulDeZbor</span>
+          </Link>
           <nav className="flex items-center gap-6 text-sm text-neutral-600">
             <Link to="/drones" className="hover:text-neutral-900">Drones</Link>
             <Link to="/firms" className="hover:text-neutral-900">Firms</Link>

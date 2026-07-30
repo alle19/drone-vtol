@@ -1,17 +1,22 @@
 export default function GalleryCard({ item }) {
+  const mediaSrc = item.media_url || '/logo-red.svg';
+
   return (
-    <div className="border border-neutral-200 rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
       {item.media_type === 'video' ? (
-        <video src={item.media_url} controls className="w-full h-48 object-cover bg-neutral-100" />
+        <video src={mediaSrc} controls className="h-48 w-full object-cover bg-neutral-100" />
       ) : (
-        <img src={item.media_url} alt={item.title} className="w-full h-48 object-cover bg-neutral-100" />
+        <img src={mediaSrc} alt={item.title} className="h-48 w-full object-cover bg-neutral-100" />
       )}
       <div className="p-4">
-        <p className="font-mono text-xs text-neutral-500 uppercase mb-1">{item.category}</p>
-        <h3 className="font-medium">{item.title}</h3>
-        <p className="text-sm text-neutral-600 mt-1">{item.description}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">{item.category || 'Gallery'}</p>
+          {item.media_type && <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] uppercase text-neutral-600">{item.media_type}</span>}
+        </div>
+        <h3 className="mt-2 font-medium text-neutral-900">{item.title}</h3>
+        <p className="mt-1 text-sm text-neutral-600">{item.description || 'VTOL media from the network.'}</p>
         {(item.drone_name || item.firm_name) && (
-          <p className="text-xs text-neutral-500 mt-2 font-mono">{[item.drone_name, item.firm_name].filter(Boolean).join(' · ')}</p>
+          <p className="mt-3 text-xs font-mono text-neutral-500">{[item.drone_name, item.firm_name].filter(Boolean).join(' · ')}</p>
         )}
       </div>
     </div>

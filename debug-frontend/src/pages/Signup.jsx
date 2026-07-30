@@ -28,7 +28,7 @@ export default function Signup() {
         <BrandLogo className="h-10" />
         <div>
           <h1 className="text-xl font-semibold">Create account</h1>
-          <p className="text-sm text-neutral-600">Join the VTOL discovery network</p>
+          <p className="text-sm text-neutral-600">Create an account to save drones, request pricing, and follow new developments.</p>
         </div>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">

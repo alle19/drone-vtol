@@ -1,48 +1,43 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { logView } from '../activity';
 
 export default function DroneDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const [drone, setDrone] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [rating, setRating] = useState(5);
-  const [reviewBody, setReviewBody] = useState('');
-  const [reviewError, setReviewError] = useState('');
+  const [testimonials, setTestimonials] = useState([]);
   const [favorited, setFavorited] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [inquiryStatus, setInquiryStatus] = useState('');
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [creatingTestimonial, setCreatingTestimonial] = useState(false);
+  const [testimonialForm, setTestimonialForm] = useState({ agency_name: '', contact_title: '', quote: '', outcome: '', featured: false });
+  const [testimonialError, setTestimonialError] = useState('');
+  const loggedViewRef = useRef(false);
 
   function load() {
     api.getDrone(id).then(setDrone);
-    api.getDroneReviews(id).then(setReviews);
+    api.getTestimonials(id).then(setTestimonials);
   }
 
   useEffect(() => { load(); }, [id]);
   useEffect(() => { if (drone) setForm(drone); }, [drone]);
 
+  useEffect(() => {
+    if (drone && !loggedViewRef.current) {
+      loggedViewRef.current = true;
+      logView('drone', drone.id);
+    }
+  }, [drone]);
+
   if (!drone) return null;
 
-  const isOwner = user?.role === 'firm_owner' && user.firm_id === drone.firm_id;
   const isAdmin = user?.role === 'admin';
-  const canReview = user && !(user.role === 'firm_owner' && user.firm_id === drone.firm_id);
-
-  async function handleReview(e) {
-    e.preventDefault();
-    setReviewError('');
-    try {
-      await api.createDroneReview(id, { rating: Number(rating), body: reviewBody });
-      setReviewBody('');
-      api.getDroneReviews(id).then(setReviews);
-      api.getDrone(id).then(setDrone);
-    } catch (err) {
-      setReviewError(err.message);
-    }
-  }
+  const isStaff = user?.role === 'admin' || user?.role === 'editor';
 
   async function handleFavorite() {
     const res = await api.toggleFavorite({ item_type: 'drone', item_id: drone.id });
@@ -53,7 +48,7 @@ export default function DroneDetail() {
     e.preventDefault();
     setInquiryStatus('');
     try {
-      await api.createInquiry({ firm_id: drone.firm_id, drone_id: drone.id, message: inquiryMessage });
+      await api.createInquiry({ drone_id: drone.id, message: inquiryMessage });
       setInquiryMessage('');
       setInquiryStatus('Sent');
     } catch (err) {
@@ -68,8 +63,20 @@ export default function DroneDetail() {
     setEditing(false);
   }
 
+  async function handleCreateTestimonial(e) {
+    e.preventDefault();
+    setTestimonialError('');
+    try {
+      await api.createTestimonial(id, testimonialForm);
+      setTestimonialForm({ agency_name: '', contact_title: '', quote: '', outcome: '', featured: false });
+      setCreatingTestimonial(false);
+      api.getTestimonials(id).then(setTestimonials);
+    } catch (err) {
+      setTestimonialError(err.message);
+    }
+  }
+
   const specFields = [
-    ['Price', drone.price ? `$${Number(drone.price).toLocaleString()}` : null],
     ['Wingspan', drone.wingspan_mm ? `${drone.wingspan_mm} mm` : null],
     ['Weight', drone.weight_kg ? `${drone.weight_kg} kg` : null],
     ['Flight time', drone.flight_time_min ? `${drone.flight_time_min} min` : null],
@@ -83,7 +90,7 @@ export default function DroneDetail() {
       <div className="lg:col-span-2 space-y-8">
         <img src={drone.primary_image_url} alt={drone.name} className="w-full h-72 object-cover rounded-lg bg-neutral-100" />
         <div>
-          <p className="font-mono text-xs text-neutral-500 uppercase mb-1">{drone.category}</p>
+          <p className="font-mono text-xs text-neutral-500 uppercase mb-1">{drone.subcategory}</p>
           <h1 className="text-3xl font-semibold">{drone.name}</h1>
           <p className="text-neutral-600 mt-2">{drone.description}</p>
         </div>
@@ -111,37 +118,57 @@ export default function DroneDetail() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-3">Reviews ({drone.review_count || 0}{drone.average_rating ? `, avg ${Number(drone.average_rating).toFixed(1)}` : ''})</h2>
+          <h2 className="text-lg font-semibold mb-3">What agencies say</h2>
           <div className="space-y-3">
-            {reviews.map((r) => (
-              <div key={r.id} className="border border-neutral-200 rounded-lg p-4">
+            {testimonials.map((t) => (
+              <div key={t.id} className="border border-neutral-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{r.reviewer_name}</span>
-                  <span className="font-mono text-sm">{r.rating}/5</span>
+                  <span className="font-medium">{t.agency_name}</span>
+                  {t.featured && <span className="text-xs font-mono uppercase text-beacon">Featured</span>}
                 </div>
-                <p className="text-sm text-neutral-600 mt-1">{r.body}</p>
+                {t.contact_title && <p className="text-xs text-neutral-500 mt-0.5">{t.contact_title}</p>}
+                <p className="text-sm text-neutral-600 mt-2">"{t.quote}"</p>
+                {t.outcome && <p className="text-sm text-neutral-500 mt-2 font-mono text-xs">{t.outcome}</p>}
               </div>
             ))}
+            {testimonials.length === 0 && <p className="text-sm text-neutral-500">No testimonials yet.</p>}
           </div>
-          {canReview && (
-            <form onSubmit={handleReview} className="mt-4 space-y-2 border border-neutral-200 rounded-lg p-4">
-              <select value={rating} onChange={(e) => setRating(e.target.value)} className="border border-neutral-300 rounded-md px-3 py-2 text-sm">
-                {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} / 5</option>)}
-              </select>
-              <textarea value={reviewBody} onChange={(e) => setReviewBody(e.target.value)} placeholder="Write a review" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} />
-              {reviewError && <p className="text-sm text-red-600">{reviewError}</p>}
-              <button type="submit" className="bg-neutral-900 text-white rounded-md px-4 py-2 text-sm font-medium">Submit review</button>
-            </form>
+
+          {isStaff && (
+            <div className="mt-4">
+              <button onClick={() => setCreatingTestimonial(!creatingTestimonial)} className="text-sm text-beacon font-medium">
+                {creatingTestimonial ? 'Cancel' : 'Add testimonial'}
+              </button>
+              {creatingTestimonial && (
+                <form onSubmit={handleCreateTestimonial} className="mt-4 space-y-2 border border-neutral-200 rounded-lg p-4">
+                  <input value={testimonialForm.agency_name} onChange={(e) => setTestimonialForm({ ...testimonialForm, agency_name: e.target.value })} placeholder="Agency name" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" required />
+                  <input value={testimonialForm.contact_title} onChange={(e) => setTestimonialForm({ ...testimonialForm, contact_title: e.target.value })} placeholder="Contact title" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" />
+                  <textarea value={testimonialForm.quote} onChange={(e) => setTestimonialForm({ ...testimonialForm, quote: e.target.value })} placeholder="Quote" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} required />
+                  <textarea value={testimonialForm.outcome} onChange={(e) => setTestimonialForm({ ...testimonialForm, outcome: e.target.value })} placeholder="Outcome" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={2} />
+                  <label className="text-sm flex items-center gap-2">
+                    <input type="checkbox" checked={testimonialForm.featured} onChange={(e) => setTestimonialForm({ ...testimonialForm, featured: e.target.checked })} />
+                    Featured
+                  </label>
+                  {testimonialError && <p className="text-sm text-red-600">{testimonialError}</p>}
+                  <button type="submit" className="bg-neutral-900 text-white rounded-md px-4 py-2 text-sm font-medium">Save testimonial</button>
+                </form>
+              )}
+            </div>
           )}
         </div>
 
-        {(isOwner || isAdmin) && (
+        {isAdmin && (
           <div>
             <button onClick={() => setEditing(!editing)} className="text-sm text-beacon font-medium">{editing ? 'Cancel edit' : 'Edit drone'}</button>
             {editing && (
               <form onSubmit={handleEdit} className="mt-4 space-y-2 border border-neutral-200 rounded-lg p-4">
                 <input value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" />
-                <input value={form.price || ''} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Price" type="number" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" />
+                <select value={form.subcategory || ''} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm">
+                  <option value="">No subcategory</option>
+                  <option value="rescue">Rescue</option>
+                  <option value="police">Police</option>
+                  <option value="medical">Medical</option>
+                </select>
                 <textarea value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} />
                 <button type="submit" className="bg-neutral-900 text-white rounded-md px-4 py-2 text-sm font-medium">Save</button>
               </form>
@@ -152,8 +179,8 @@ export default function DroneDetail() {
 
       <div className="space-y-6">
         <div className="border border-neutral-200 rounded-lg p-4">
-          <p className="text-2xl font-semibold">${drone.price ? Number(drone.price).toLocaleString() : '—'}</p>
-          <Link to={`/firms/${drone.firm_id}`} className="text-sm text-beacon mt-1 block">View firm</Link>
+          <p className="text-lg font-semibold">Quote-only — no public pricing</p>
+          <p className="text-sm text-neutral-600 mt-1">Request a demo or pricing below.</p>
           {user && (
             <button onClick={handleFavorite} className="w-full mt-4 border border-neutral-300 rounded-md py-2 text-sm font-medium">
               {favorited ? 'Remove favorite' : 'Add to favorites'}
@@ -163,9 +190,9 @@ export default function DroneDetail() {
 
         {user && (
           <form onSubmit={handleInquiry} className="border border-neutral-200 rounded-lg p-4 space-y-2">
-            <h3 className="font-medium">Contact this firm</h3>
-            <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} placeholder="Ask a question" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} required />
-            <button type="submit" className="w-full bg-neutral-900 text-white rounded-md py-2 text-sm font-medium">Send inquiry</button>
+            <h3 className="font-medium">Request pricing / a demo</h3>
+            <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} placeholder="Tell us about your use case" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} required />
+            <button type="submit" className="w-full bg-neutral-900 text-white rounded-md py-2 text-sm font-medium">Send request</button>
             {inquiryStatus && <p className="text-sm text-neutral-600">{inquiryStatus}</p>}
           </form>
         )}

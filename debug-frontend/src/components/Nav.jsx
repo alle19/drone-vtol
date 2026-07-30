@@ -15,7 +15,6 @@ export default function Nav() {
           </Link>
           <nav className="flex items-center gap-6 text-sm text-neutral-600">
             <Link to="/drones" className="hover:text-neutral-900">Drones</Link>
-            <Link to="/firms" className="hover:text-neutral-900">Firms</Link>
             <Link to="/articles" className="hover:text-neutral-900">Articles</Link>
             <Link to="/gallery" className="hover:text-neutral-900">Gallery</Link>
           </nav>
@@ -24,6 +23,9 @@ export default function Nav() {
           {user ? (
             <>
               <Link to="/favorites" className="text-neutral-600 hover:text-neutral-900">Favorites</Link>
+              {user.role === 'admin' && (
+                <Link to="/admin/stats" className="text-neutral-600 hover:text-neutral-900">Stats</Link>
+              )}
               <Link to="/account" className="text-neutral-600 hover:text-neutral-900">{user.name}</Link>
               <span className="px-2 py-1 rounded-full bg-beacon/10 text-beacon text-xs font-mono uppercase">{user.role}</span>
               <button onClick={logout} className="text-neutral-600 hover:text-neutral-900">Logout</button>

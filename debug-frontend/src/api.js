@@ -36,11 +36,6 @@ export const signup = (body) => request('/api/auth/signup', { method: 'POST', bo
 export const login = (body) => request('/api/auth/login', { method: 'POST', body: JSON.stringify(body) });
 export const getMe = () => request('/api/auth/me');
 
-export const getFirms = () => request('/api/firms');
-export const getFirm = (id) => request(`/api/firms/${id}`);
-export const createFirm = (body) => request('/api/firms', { method: 'POST', body: JSON.stringify(body) });
-export const updateFirm = (id, body) => request(`/api/firms/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
-
 export const getDrones = (params = {}) => {
   const qs = new URLSearchParams(params).toString();
   return request(`/api/drones${qs ? `?${qs}` : ''}`);
@@ -49,8 +44,8 @@ export const getDrone = (id) => request(`/api/drones/${id}`);
 export const createDrone = (body) => request('/api/drones', { method: 'POST', body: JSON.stringify(body) });
 export const updateDrone = (id, body) => request(`/api/drones/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
 
-export const getDroneReviews = (droneId) => request(`/api/drones/${droneId}/reviews`);
-export const createDroneReview = (droneId, body) => request(`/api/drones/${droneId}/reviews`, { method: 'POST', body: JSON.stringify(body) });
+export const getTestimonials = (droneId) => request(`/api/drones/${droneId}/testimonials`);
+export const createTestimonial = (droneId, body) => request(`/api/drones/${droneId}/testimonials`, { method: 'POST', body: JSON.stringify(body) });
 
 export const getArticles = (params = {}) => {
   const qs = new URLSearchParams(params).toString();
@@ -74,3 +69,8 @@ export const updateInquiry = (id, body) => request(`/api/inquiries/${id}`, { met
 export const toggleFavorite = (body) => request('/api/favorites', { method: 'POST', body: JSON.stringify(body) });
 export const getFavorites = () => request('/api/favorites');
 export const getLanding = () => request('/api/landing');
+
+export const subscribeNewsletter = (body) => request('/api/newsletter/subscribe', { method: 'POST', body: JSON.stringify(body) });
+
+export const getStats = () => request('/api/activity/stats');
+export const logEvent = (body) => request('/api/activity', { method: 'POST', body: JSON.stringify(body) });

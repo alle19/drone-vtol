@@ -6,7 +6,6 @@ const { authenticate } = require('../middleware/auth');
 const TABLE_BY_TYPE = {
   drone: { table: 'drones', titleCol: 'name', imageCol: 'primary_image_url' },
   article: { table: 'articles', titleCol: 'title', imageCol: 'featured_image_url' },
-  firm: { table: 'firms', titleCol: 'name', imageCol: 'logo_url' },
 };
 
 router.post('/', authenticate, async (req, res) => {
@@ -14,7 +13,7 @@ router.post('/', authenticate, async (req, res) => {
     const { item_type, item_id } = req.body;
 
     if (!TABLE_BY_TYPE[item_type] || !item_id) {
-      return res.status(400).json({ error: "item_type must be 'drone', 'article', or 'firm', and item_id is required" });
+      return res.status(400).json({ error: "item_type must be 'drone' or 'article', and item_id is required" });
     }
 
     const { table } = TABLE_BY_TYPE[item_type];
@@ -46,7 +45,7 @@ router.get('/', authenticate, async (req, res) => {
     const favoritesResult = await pool.query('SELECT * FROM favorites WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
     const favorites = favoritesResult.rows;
 
-    const idsByType = { drone: [], article: [], firm: [] };
+    const idsByType = { drone: [], article: [] };
     favorites.forEach((f) => idsByType[f.item_type].push(f.item_id));
 
     const detailMaps = {};

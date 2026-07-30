@@ -134,7 +134,7 @@ export default function Home() {
             placeholder="you@example.com"
             value={newsletterEmail}
             onChange={(e) => setNewsletterEmail(e.target.value)}
-            className="flex-1 border border-neutral-300 rounded-md px-3 py-2 text-sm"
+            className="flex-1 border border-neutral-300 rounded-md px-3 py-2"
           />
           <button type="submit" className="bg-neutral-900 text-white rounded-md px-4 py-2 text-sm font-medium">Subscribe</button>
         </form>

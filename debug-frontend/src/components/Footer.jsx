@@ -9,7 +9,7 @@ export default function Footer() {
           href="https://www.instagram.com/punctuldezbor" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-neutral-600 hover:text-beacon transition"
+          className="flex items-center justify-center w-11 h-11 -m-2.5 text-neutral-600 hover:text-beacon transition"
           aria-label="Instagram"
         >
           <LuInstagram className="w-6 h-6" />

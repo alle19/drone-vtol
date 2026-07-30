@@ -191,7 +191,7 @@ export default function DroneDetail() {
         {user && (
           <form onSubmit={handleInquiry} className="border border-neutral-200 rounded-lg p-4 space-y-2">
             <h3 className="font-medium">Request pricing / a demo</h3>
-            <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} placeholder="Tell us about your use case" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" rows={3} required />
+            <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} placeholder="Tell us about your use case" className="w-full border border-neutral-300 rounded-md px-3 py-2" rows={3} required />
             <button type="submit" className="w-full bg-neutral-900 text-white rounded-md py-2 text-sm font-medium">Send request</button>
             {inquiryStatus && <p className="text-sm text-neutral-600">{inquiryStatus}</p>}
           </form>

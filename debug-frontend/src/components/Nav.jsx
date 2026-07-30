@@ -85,7 +85,7 @@ export default function Nav() {
             </>
           ) : (
             <>
-              <Link to="/login" onClick={close} className="flex items-center min-h-11 text-neutral-700">Login</Link>
+              <Link to="/login" onClick={close} className="flex items-center justify-center min-h-11 my-1 rounded-md border border-neutral-300 text-neutral-900 font-medium">Login</Link>
               <Link to="/signup" onClick={close} className="flex items-center justify-center min-h-11 my-1 rounded-md bg-neutral-900 text-white font-medium">Sign up</Link>
             </>
           )}

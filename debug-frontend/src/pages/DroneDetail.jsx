@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
 import { logView } from '../activity';
+import { SkeletonBlock } from '../components/Skeleton.jsx';
 
 export default function DroneDetail() {
   const { id } = useParams();
@@ -34,7 +35,29 @@ export default function DroneDetail() {
     }
   }, [drone]);
 
-  if (!drone) return null;
+  if (!drone) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <SkeletonBlock className="w-full h-72" />
+          <div className="space-y-2">
+            <SkeletonBlock className="h-3 w-20" />
+            <SkeletonBlock className="h-8 w-2/3" />
+            <SkeletonBlock className="h-4 w-full" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-6">
+          <SkeletonBlock className="h-32 w-full" />
+          <SkeletonBlock className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = user?.role === 'admin';
   const isStaff = user?.role === 'admin' || user?.role === 'editor';
@@ -121,7 +144,7 @@ export default function DroneDetail() {
           <h2 className="text-lg font-semibold mb-3">What agencies say</h2>
           <div className="space-y-3">
             {testimonials.map((t) => (
-              <div key={t.id} className="border border-neutral-200 rounded-lg p-4">
+              <div key={t.id} className="border border-neutral-200 rounded-lg p-4 transition hover:-translate-y-0.5 hover:border-neutral-400 motion-reduce:transition-none">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{t.agency_name}</span>
                   {t.featured && <span className="text-xs font-mono uppercase text-beacon">Featured</span>}

@@ -9,3 +9,23 @@
 body {
   font-family: var(--font-sans);
 }
+
+.hero-drone-group {
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-drone-group {
+    animation: vtol-cruise 1.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes vtol-cruise {
+  from {
+    transform: rotate(-90deg) scale(0.9) translateY(6px);
+  }
+  to {
+    transform: rotate(0deg) scale(1) translateY(0);
+  }
+}

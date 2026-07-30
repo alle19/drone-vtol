@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
 import GalleryCard from '../components/GalleryCard.jsx';
+import { SkeletonCard } from '../components/Skeleton.jsx';
 
 export default function Gallery() {
   const { user } = useAuth();
@@ -9,11 +10,13 @@ export default function Gallery() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ title: '', media_url: '', media_type: 'image', category: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const canCreate = user?.role === 'admin' || user?.role === 'editor';
 
   function load() {
-    api.getGallery().then(setItems);
+    setLoading(true);
+    api.getGallery().then(setItems).finally(() => setLoading(false));
   }
 
   useEffect(() => { load(); }, []);
@@ -57,7 +60,9 @@ export default function Gallery() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((i) => <GalleryCard key={i.id} item={i} />)}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} imageHeight="h-48" />)
+          : items.map((i) => <GalleryCard key={i.id} item={i} />)}
       </div>
     </div>
   );

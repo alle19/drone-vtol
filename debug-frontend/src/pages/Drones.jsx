@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import * as api from '../api';
 import DroneCard from '../components/DroneCard.jsx';
+import { SkeletonCard } from '../components/Skeleton.jsx';
 
 export default function Drones() {
   const [drones, setDrones] = useState([]);
   const [subcategory, setSubcategory] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const params = {};
     if (subcategory) params.subcategory = subcategory;
-    api.getDrones(params).then(setDrones);
+    api.getDrones(params).then(setDrones).finally(() => setLoading(false));
   }, [subcategory]);
 
   return (
@@ -24,7 +27,9 @@ export default function Drones() {
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {drones.map((d) => <DroneCard key={d.id} drone={d} />)}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+          : drones.map((d) => <DroneCard key={d.id} drone={d} />)}
       </div>
     </div>
   );

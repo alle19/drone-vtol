@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { SkeletonBlock } from '../components/Skeleton.jsx';
 
 export default function ArticleDetail() {
   const { slug } = useParams();
@@ -17,7 +18,20 @@ export default function ArticleDetail() {
   useEffect(() => { load(); }, [slug]);
   useEffect(() => { if (article) setForm(article); }, [article]);
 
-  if (!article) return null;
+  if (!article) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-4">
+        <SkeletonBlock className="h-3 w-32" />
+        <SkeletonBlock className="h-9 w-3/4" />
+        <SkeletonBlock className="h-64 w-full" />
+        <div className="space-y-2">
+          <SkeletonBlock className="h-4 w-full" />
+          <SkeletonBlock className="h-4 w-full" />
+          <SkeletonBlock className="h-4 w-2/3" />
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = user?.role === 'admin';
   const isAuthor = user?.role === 'editor' && user.id === article.author_id;

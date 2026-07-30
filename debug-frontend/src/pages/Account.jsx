@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { SkeletonBlock } from '../components/Skeleton.jsx';
 
 export default function Account() {
   const { user } = useAuth();
@@ -16,7 +17,18 @@ export default function Account() {
     api.getInquiries().then(setInquiries);
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="space-y-2">
+          <SkeletonBlock className="h-7 w-40" />
+          <SkeletonBlock className="h-4 w-56" />
+          <SkeletonBlock className="h-5 w-20 rounded-full" />
+        </div>
+        <SkeletonBlock className="h-24 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">

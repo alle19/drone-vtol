@@ -2,7 +2,7 @@ export default function GalleryCard({ item }) {
   const mediaSrc = item.media_url || '/logo-red.svg';
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:-translate-y-0.5 hover:border-neutral-400 motion-reduce:transition-none">
       {item.media_type === 'video' ? (
         <video src={mediaSrc} controls className="h-48 w-full object-cover bg-neutral-100" />
       ) : (

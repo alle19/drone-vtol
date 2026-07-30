@@ -5,6 +5,8 @@ import {
 } from 'recharts';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { SkeletonBlock } from '../components/Skeleton.jsx';
+import { useCountUp } from '../hooks/useCountUp';
 
 const COLORS = {
   blue: '#2a78d6',
@@ -86,6 +88,11 @@ export default function AdminStats() {
   const [error, setError] = useState('');
 
   const isAdmin = user?.role === 'admin';
+  const totalUsers = stats ? stats.users_by_role.reduce((sum, r) => sum + r.count, 0) : null;
+
+  const animatedSubscribers = useCountUp(stats?.subscriber_count ?? null);
+  const animatedTotalUsers = useCountUp(totalUsers);
+  const animatedContactSeconds = useCountUp(stats?.avg_time_to_contact_seconds ?? null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -107,9 +114,28 @@ export default function AdminStats() {
 
   if (!isAdmin) return null;
 
-  if (!stats) return error ? <p className="text-red-600">{error}</p> : null;
-
-  const totalUsers = stats.users_by_role.reduce((sum, r) => sum + r.count, 0);
+  if (!stats) {
+    return (
+      <div className="space-y-10">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Activity Stats</h1>
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="border border-neutral-200 rounded-lg p-4 space-y-2">
+              <SkeletonBlock className="h-3 w-24" />
+              <SkeletonBlock className="h-8 w-16" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <SkeletonBlock className="h-80 w-full" />
+          <SkeletonBlock className="h-80 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
@@ -118,7 +144,7 @@ export default function AdminStats() {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="border border-neutral-300 rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+          className="min-h-11 flex items-center justify-center border border-neutral-300 rounded-md px-3 text-sm font-medium disabled:opacity-50"
         >
           {refreshing ? 'Refreshing…' : 'Refresh'}
         </button>
@@ -129,15 +155,15 @@ export default function AdminStats() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="border border-neutral-200 rounded-lg p-4">
           <p className="text-xs font-mono uppercase text-neutral-500">Subscribers</p>
-          <p className="text-3xl font-semibold mt-1">{stats.subscriber_count}</p>
+          <p className="text-3xl font-semibold mt-1">{Math.round(animatedSubscribers)}</p>
         </div>
         <div className="border border-neutral-200 rounded-lg p-4">
           <p className="text-xs font-mono uppercase text-neutral-500">Total users</p>
-          <p className="text-3xl font-semibold mt-1">{totalUsers}</p>
+          <p className="text-3xl font-semibold mt-1">{Math.round(animatedTotalUsers)}</p>
         </div>
         <div className="border border-neutral-200 rounded-lg p-4">
           <p className="text-xs font-mono uppercase text-neutral-500">Avg time to contact</p>
-          <p className="text-3xl font-semibold mt-1">{formatDuration(stats.avg_time_to_contact_seconds)}</p>
+          <p className="text-3xl font-semibold mt-1">{formatDuration(animatedContactSeconds)}</p>
         </div>
       </div>
 

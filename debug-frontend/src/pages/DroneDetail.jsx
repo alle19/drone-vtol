@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
 import { logView } from '../activity';
+import { SkeletonBlock } from '../components/Skeleton.jsx';
 
 export default function DroneDetail() {
   const { id } = useParams();
@@ -34,7 +35,29 @@ export default function DroneDetail() {
     }
   }, [drone]);
 
-  if (!drone) return null;
+  if (!drone) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <SkeletonBlock className="w-full h-72" />
+          <div className="space-y-2">
+            <SkeletonBlock className="h-3 w-20" />
+            <SkeletonBlock className="h-8 w-2/3" />
+            <SkeletonBlock className="h-4 w-full" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-6">
+          <SkeletonBlock className="h-32 w-full" />
+          <SkeletonBlock className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = user?.role === 'admin';
   const isStaff = user?.role === 'admin' || user?.role === 'editor';
@@ -121,7 +144,7 @@ export default function DroneDetail() {
           <h2 className="text-lg font-semibold mb-3">What agencies say</h2>
           <div className="space-y-3">
             {testimonials.map((t) => (
-              <div key={t.id} className="border border-neutral-200 rounded-lg p-4">
+              <div key={t.id} className="border border-neutral-200 rounded-lg p-4 transition hover:-translate-y-0.5 hover:border-neutral-400 motion-reduce:transition-none">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{t.agency_name}</span>
                   {t.featured && <span className="text-xs font-mono uppercase text-beacon">Featured</span>}
@@ -136,7 +159,7 @@ export default function DroneDetail() {
 
           {isStaff && (
             <div className="mt-4">
-              <button onClick={() => setCreatingTestimonial(!creatingTestimonial)} className="text-sm text-beacon font-medium">
+              <button onClick={() => setCreatingTestimonial(!creatingTestimonial)} className="flex items-center min-h-11 text-sm text-beacon font-medium">
                 {creatingTestimonial ? 'Cancel' : 'Add testimonial'}
               </button>
               {creatingTestimonial && (
@@ -159,7 +182,7 @@ export default function DroneDetail() {
 
         {isAdmin && (
           <div>
-            <button onClick={() => setEditing(!editing)} className="text-sm text-beacon font-medium">{editing ? 'Cancel edit' : 'Edit drone'}</button>
+            <button onClick={() => setEditing(!editing)} className="flex items-center min-h-11 text-sm text-beacon font-medium">{editing ? 'Cancel edit' : 'Edit drone'}</button>
             {editing && (
               <form onSubmit={handleEdit} className="mt-4 space-y-2 border border-neutral-200 rounded-lg p-4">
                 <input value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="w-full border border-neutral-300 rounded-md px-3 py-2 text-sm" />
@@ -182,7 +205,7 @@ export default function DroneDetail() {
           <p className="text-lg font-semibold">Quote-only — no public pricing</p>
           <p className="text-sm text-neutral-600 mt-1">Request a demo or pricing below.</p>
           {user && (
-            <button onClick={handleFavorite} className="w-full mt-4 border border-neutral-300 rounded-md py-2 text-sm font-medium">
+            <button onClick={handleFavorite} className="w-full mt-4 min-h-11 flex items-center justify-center border border-neutral-300 rounded-md text-sm font-medium">
               {favorited ? 'Remove favorite' : 'Add to favorites'}
             </button>
           )}
@@ -192,7 +215,7 @@ export default function DroneDetail() {
           <form onSubmit={handleInquiry} className="border border-neutral-200 rounded-lg p-4 space-y-2">
             <h3 className="font-medium">Request pricing / a demo</h3>
             <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} placeholder="Tell us about your use case" className="w-full border border-neutral-300 rounded-md px-3 py-2" rows={3} required />
-            <button type="submit" className="w-full bg-neutral-900 text-white rounded-md py-2 text-sm font-medium">Send request</button>
+            <button type="submit" className="w-full min-h-11 flex items-center justify-center bg-neutral-900 text-white rounded-md text-sm font-medium">Send request</button>
             {inquiryStatus && <p className="text-sm text-neutral-600">{inquiryStatus}</p>}
           </form>
         )}

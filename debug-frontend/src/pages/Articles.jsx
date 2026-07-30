@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
 import ArticleCard from '../components/ArticleCard.jsx';
+import { SkeletonCard } from '../components/Skeleton.jsx';
 
 export default function Articles() {
   const { user } = useAuth();
@@ -10,15 +11,14 @@ export default function Articles() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ title: '', slug: '', body: '', category: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const isStaff = user?.role === 'editor' || user?.role === 'admin';
 
   function load() {
-    if (showAll && isStaff) {
-      api.getAllArticles().then(setArticles);
-    } else {
-      api.getArticles().then(setArticles);
-    }
+    setLoading(true);
+    const request = showAll && isStaff ? api.getAllArticles() : api.getArticles();
+    request.then(setArticles).finally(() => setLoading(false));
   }
 
   useEffect(() => { load(); }, [showAll]);
@@ -67,7 +67,9 @@ export default function Articles() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} imageHeight="h-40" />)
+          : articles.map((a) => <ArticleCard key={a.id} article={a} />)}
       </div>
     </div>
   );

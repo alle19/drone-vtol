@@ -4,15 +4,29 @@ import * as api from '../api';
 import DroneCard from '../components/DroneCard.jsx';
 import ArticleCard from '../components/ArticleCard.jsx';
 import BrandLogo from '../components/BrandLogo.jsx';
+import DroneHero from '../components/DroneHero.jsx';
+import { SkeletonCard } from '../components/Skeleton.jsx';
+import { useReveal } from '../hooks/useReveal';
 import { getReferralSource } from '../referral';
+
+const REVEAL_CLASSES = 'transition duration-700 ease-out motion-reduce:transition-none';
+
+function revealClass(revealed) {
+  return `${REVEAL_CLASSES} ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`;
+}
 
 export default function Home() {
   const [drones, setDrones] = useState([]);
   const [articles, setArticles] = useState([]);
   const [landing, setLanding] = useState(null);
   const [loadError, setLoadError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState('');
+
+  const [dronesRef, dronesRevealed] = useReveal();
+  const [articlesRef, articlesRevealed] = useReveal();
+  const [newsletterRef, newsletterRevealed] = useReveal();
 
   useEffect(() => {
     let active = true;
@@ -45,6 +59,8 @@ export default function Home() {
       if (dronesResult.status === 'rejected' || articlesResult.status === 'rejected' || landingResult.status === 'rejected') {
         setLoadError('Some content could not be loaded right now. The homepage is still available.');
       }
+
+      setLoading(false);
     }
 
     load().catch(() => setLoadError('Some content could not be loaded right now.'));
@@ -80,6 +96,7 @@ export default function Home() {
 
       <section className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
         <div className="flex flex-col items-center text-center">
+          <DroneHero className="mb-2" />
           <div className="mb-4 flex items-center gap-3 rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2">
             <BrandLogo className="h-8" />
             <p className="font-mono text-sm text-beacon">{landing?.hashtag || '#PunctulDeZbor'}</p>
@@ -104,27 +121,31 @@ export default function Home() {
         )}
       </section>
 
-      <section>
+      <section ref={dronesRef} className={revealClass(dronesRevealed)}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Featured drones</h2>
-          <Link to="/drones" className="text-sm text-neutral-600">View all</Link>
+          <Link to="/drones" className="flex items-center min-h-11 text-sm text-neutral-600">View all</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {drones.map((d) => <DroneCard key={d.id} drone={d} />)}
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
+            : drones.map((d) => <DroneCard key={d.id} drone={d} />)}
         </div>
       </section>
 
-      <section>
+      <section ref={articlesRef} className={revealClass(articlesRevealed)}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Latest articles</h2>
-          <Link to="/articles" className="text-sm text-neutral-600">View all</Link>
+          <Link to="/articles" className="flex items-center min-h-11 text-sm text-neutral-600">View all</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
+          {loading
+            ? Array.from({ length: 2 }).map((_, i) => <SkeletonCard key={i} imageHeight="h-40" />)
+            : articles.map((a) => <ArticleCard key={a.id} article={a} />)}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm text-center">
+      <section ref={newsletterRef} className={`rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm text-center ${revealClass(newsletterRevealed)}`}>
         <h2 className="text-lg font-semibold">Stay in the loop</h2>
         <p className="mt-2 text-sm text-neutral-600 max-w-md mx-auto">Get updates on new drones, field results, and demo events. No spam.</p>
         <form onSubmit={handleNewsletterSubmit} className="mt-4 flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">

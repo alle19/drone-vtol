@@ -8,9 +8,27 @@ async function request(path, options = {}) {
   const token = getToken();
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || 'Request failed');
+
+  let res;
+
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch (err) {
+    throw new Error(`Network error: ${err.message}`);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await res.json().catch(() => null)
+    : await res.text().catch(() => '');
+
+  if (!res.ok) {
+    const message = typeof data === 'string'
+      ? data
+      : data?.error || data?.message || 'Request failed';
+    throw new Error(`${res.status} ${res.statusText}: ${message}`);
+  }
+
   return data;
 }
 
@@ -55,3 +73,4 @@ export const updateInquiry = (id, body) => request(`/api/inquiries/${id}`, { met
 
 export const toggleFavorite = (body) => request('/api/favorites', { method: 'POST', body: JSON.stringify(body) });
 export const getFavorites = () => request('/api/favorites');
+export const getLanding = () => request('/api/landing');

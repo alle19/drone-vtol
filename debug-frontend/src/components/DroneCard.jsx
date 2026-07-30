@@ -1,13 +1,17 @@
 import { Link } from 'react-router-dom';
 
 export default function DroneCard({ drone }) {
+  const priceLabel = drone.price != null && drone.price !== ''
+    ? `$${Number(drone.price).toLocaleString()}`
+    : 'Price on request';
+
   return (
-    <Link to={`/drones/${drone.id}`} className="block border border-neutral-200 rounded-lg overflow-hidden hover:border-neutral-400 transition">
-      <img src={drone.primary_image_url} alt={drone.name} className="w-full h-40 object-cover bg-neutral-100" />
+    <Link to={`/drones/${drone.id}`} className="block overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:-translate-y-0.5 hover:border-neutral-400">
+      <img src={drone.primary_image_url || '/logo-red.svg'} alt={drone.name} className="h-44 w-full object-cover bg-neutral-100" />
       <div className="p-4">
-        <p className="font-mono text-xs text-neutral-500 uppercase mb-1">{drone.category}</p>
-        <h3 className="font-medium">{drone.name}</h3>
-        <p className="text-sm text-neutral-600 mt-1">${Number(drone.price).toLocaleString()}</p>
+        <p className="mb-1 font-mono text-xs uppercase tracking-wide text-neutral-500">{drone.category || 'VTOL'}</p>
+        <h3 className="font-medium text-neutral-900">{drone.name}</h3>
+        <p className="mt-2 text-sm text-neutral-600">{priceLabel}</p>
       </div>
     </Link>
   );

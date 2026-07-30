@@ -19,11 +19,11 @@ export default function Favorites() {
       <h1 className="text-2xl font-semibold mb-6">Favorites</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {favorites.map((f) => (
-          <Link key={f.id} to={hrefFor(f)} className="block border border-neutral-200 rounded-lg overflow-hidden hover:border-neutral-400 transition">
-            {f.item?.image_url && <img src={f.item.image_url} alt={f.item.title} className="w-full h-40 object-cover bg-neutral-100" />}
+          <Link key={f.id} to={hrefFor(f)} className="block overflow-hidden rounded-2xl border border-neutral-200 bg-white hover:border-neutral-400 transition">
+            <img src={f.item?.image_url || '/logo-red.svg'} alt={f.item?.title || 'Favorite'} className="h-40 w-full object-cover bg-neutral-100" />
             <div className="p-4">
-              <p className="font-mono text-xs text-neutral-500 uppercase mb-1">{f.item_type}</p>
-              <h3 className="font-medium">{f.item?.title}</h3>
+              <p className="mb-1 font-mono text-xs uppercase tracking-wide text-neutral-500">{f.item_type}</p>
+              <h3 className="font-medium text-neutral-900">{f.item?.title || 'Saved item'}</h3>
             </div>
           </Link>
         ))}

@@ -36,7 +36,7 @@ export default function Login() {
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button type="submit" className="w-full min-h-11 flex items-center justify-center bg-neutral-900 text-white rounded-md font-medium">Log in</button>
       </form>
-      <p className="text-sm text-neutral-600 mt-4">No account? <Link to="/signup" className="text-beacon">Sign up</Link></p>
+      <p className="text-sm text-neutral-600 mt-4">No account? <Link to="/signup" className="text-beacon inline-block py-3 -my-3">Sign up</Link></p>
     </div>
   );
 }

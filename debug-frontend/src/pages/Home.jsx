@@ -107,7 +107,7 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Featured drones</h2>
-          <Link to="/drones" className="text-sm text-neutral-600">View all</Link>
+          <Link to="/drones" className="flex items-center min-h-11 text-sm text-neutral-600">View all</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {drones.map((d) => <DroneCard key={d.id} drone={d} />)}
@@ -117,7 +117,7 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Latest articles</h2>
-          <Link to="/articles" className="text-sm text-neutral-600">View all</Link>
+          <Link to="/articles" className="flex items-center min-h-11 text-sm text-neutral-600">View all</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {articles.map((a) => <ArticleCard key={a.id} article={a} />)}

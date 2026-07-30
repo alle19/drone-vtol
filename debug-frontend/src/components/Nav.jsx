@@ -21,7 +21,7 @@ export default function Nav() {
     <header className="border-b border-neutral-200 bg-white/90 backdrop-blur">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-3" onClick={close}>
+          <Link to="/" className="flex items-center gap-3 min-h-11" onClick={close}>
             <BrandLogo className="h-9" />
             <span className="font-semibold text-lg tracking-tight text-neutral-900">PunctulDeZbor</span>
           </Link>

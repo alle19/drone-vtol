@@ -5,7 +5,7 @@ const { authenticate, authorize, optionalAuthenticate } = require('../middleware
 
 router.get('/', async (req, res) => {
   try {
-    const { category, related_drone_id, related_firm_id } = req.query;
+    const { category, related_drone_id } = req.query;
 
     const conditions = [`status = 'published'`];
     const values = [];
@@ -17,10 +17,6 @@ router.get('/', async (req, res) => {
     if (related_drone_id) {
       values.push(related_drone_id);
       conditions.push(`related_drone_id = $${values.length}`);
-    }
-    if (related_firm_id) {
-      values.push(related_firm_id);
-      conditions.push(`related_firm_id = $${values.length}`);
     }
 
     const result = await pool.query(
@@ -70,7 +66,7 @@ router.get('/:slug', optionalAuthenticate, async (req, res) => {
 
 router.post('/', authenticate, authorize('editor', 'admin'), async (req, res) => {
   try {
-    const { title, slug, body, category, featured_image_url, related_drone_id, related_firm_id, status } = req.body;
+    const { title, slug, body, category, featured_image_url, related_drone_id, status } = req.body;
 
     if (!title || !slug || !body) {
       return res.status(400).json({ error: 'title, slug, and body are required' });
@@ -80,8 +76,8 @@ router.post('/', authenticate, authorize('editor', 'admin'), async (req, res) =>
     const publishedAt = finalStatus === 'published' ? new Date() : null;
 
     const result = await pool.query(
-      `INSERT INTO articles (title, slug, body, author_id, category, status, featured_image_url, related_drone_id, related_firm_id, published_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      `INSERT INTO articles (title, slug, body, author_id, category, status, featured_image_url, related_drone_id, published_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
       [
         title,
         slug,
@@ -91,7 +87,6 @@ router.post('/', authenticate, authorize('editor', 'admin'), async (req, res) =>
         finalStatus,
         featured_image_url ?? null,
         related_drone_id ?? null,
-        related_firm_id ?? null,
         publishedAt,
       ]
     );
@@ -123,7 +118,7 @@ router.patch('/:id', authenticate, authorize('editor', 'admin'), async (req, res
       return res.status(403).json({ error: 'You can only edit your own articles' });
     }
 
-    const { title, body, category, featured_image_url, related_drone_id, related_firm_id, status } = req.body;
+    const { title, body, category, featured_image_url, related_drone_id, status } = req.body;
 
     let publishedAt = article.published_at;
     if (status === 'published' && article.status !== 'published') {
@@ -137,17 +132,15 @@ router.patch('/:id', authenticate, authorize('editor', 'admin'), async (req, res
         category = COALESCE($3, category),
         featured_image_url = COALESCE($4, featured_image_url),
         related_drone_id = COALESCE($5, related_drone_id),
-        related_firm_id = COALESCE($6, related_firm_id),
-        status = COALESCE($7, status),
-        published_at = $8
-       WHERE id = $9 RETURNING *`,
+        status = COALESCE($6, status),
+        published_at = $7
+       WHERE id = $8 RETURNING *`,
       [
         title ?? null,
         body ?? null,
         category ?? null,
         featured_image_url ?? null,
         related_drone_id ?? null,
-        related_firm_id ?? null,
         status ?? null,
         publishedAt,
         id,

@@ -15,8 +15,8 @@ export default function GalleryCard({ item }) {
         </div>
         <h3 className="mt-2 font-medium text-neutral-900">{item.title}</h3>
         <p className="mt-1 text-sm text-neutral-600">{item.description || 'VTOL media from the network.'}</p>
-        {(item.drone_name || item.firm_name) && (
-          <p className="mt-3 text-xs font-mono text-neutral-500">{[item.drone_name, item.firm_name].filter(Boolean).join(' · ')}</p>
+        {item.drone_name && (
+          <p className="mt-3 text-xs font-mono text-neutral-500">{item.drone_name}</p>
         )}
       </div>
     </div>

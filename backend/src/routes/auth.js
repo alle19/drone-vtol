@@ -16,7 +16,7 @@ function publicUser(user) {
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, referral_source } = req.body;
 
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'email, password, and name are required' });
@@ -30,9 +30,9 @@ router.post('/signup', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role)
-       VALUES ($1, $2, $3, 'user') RETURNING *`,
-      [email, passwordHash, name]
+      `INSERT INTO users (email, password_hash, name, role, referral_source)
+       VALUES ($1, $2, $3, 'user', $4) RETURNING *`,
+      [email, passwordHash, name, referral_source ?? null]
     );
 
     const user = result.rows[0];

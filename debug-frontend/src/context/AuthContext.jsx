@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as api from '../api';
+import { getReferralSource } from '../referral';
 
 const AuthContext = createContext(null);
 
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
   }
 
   async function signup(email, password, name) {
-    const data = await api.signup({ email, password, name });
+    const data = await api.signup({ email, password, name, referral_source: getReferralSource() });
     localStorage.setItem('token', data.token);
     setUser(data.user);
   }

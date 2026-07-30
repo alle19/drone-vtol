@@ -26,29 +26,10 @@ export default function Account() {
         <span className="inline-block mt-2 text-xs font-mono uppercase px-2 py-1 rounded-full bg-beacon/10 text-beacon">{user.role}</span>
       </div>
 
-      {user.role === 'user' && (
-        <div className="border border-neutral-200 rounded-lg p-4">
-          <p className="text-sm text-neutral-600 mb-3">You don't manage a firm yet.</p>
-          <Link to="/firms" className="text-sm text-beacon font-medium">List your business</Link>
-        </div>
-      )}
-
-      {user.role === 'firm_owner' && (
-        <div className="border border-neutral-200 rounded-lg p-4">
-          <Link to={`/firms/${user.firm_id}`} className="text-sm text-beacon font-medium">Manage your firm</Link>
-        </div>
-      )}
-
       {(user.role === 'editor' || user.role === 'admin') && (
         <div className="border border-neutral-200 rounded-lg p-4 space-y-2">
           <Link to="/articles" className="text-sm text-beacon font-medium block">Manage articles</Link>
           <Link to="/gallery" className="text-sm text-beacon font-medium block">Manage gallery</Link>
-        </div>
-      )}
-
-      {user.role === 'admin' && (
-        <div className="border border-neutral-200 rounded-lg p-4">
-          <Link to="/firms" className="text-sm text-beacon font-medium">Verify firms</Link>
         </div>
       )}
 
@@ -60,7 +41,7 @@ export default function Account() {
               <p className="text-sm">{i.message}</p>
               <div className="flex items-center justify-between mt-2">
                 <span className="font-mono text-xs text-neutral-500">{i.status}</span>
-                {(user.role === 'admin' || user.role === 'firm_owner') && (
+                {user.role === 'admin' && (
                   <select value={i.status} onChange={(e) => updateStatus(i.id, e.target.value)} className="border border-neutral-300 rounded-md px-2 py-1 text-xs">
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>

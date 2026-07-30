@@ -15,7 +15,6 @@ export default function Nav() {
           </Link>
           <nav className="flex items-center gap-6 text-sm text-neutral-600">
             <Link to="/drones" className="hover:text-neutral-900">Drones</Link>
-            <Link to="/firms" className="hover:text-neutral-900">Firms</Link>
             <Link to="/articles" className="hover:text-neutral-900">Articles</Link>
             <Link to="/gallery" className="hover:text-neutral-900">Gallery</Link>
           </nav>

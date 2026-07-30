@@ -5,202 +5,242 @@ const SEED_PASSWORD = 'TestPass123!';
 
 const IMG_DELTAQUAD = 'https://commons.wikimedia.org/wiki/Special:FilePath/DeltaQuad_VTOL_surveillance_UAV.jpg?width=800';
 const IMG_MITSUBISHI = 'https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi_Fixed-wing_VTOL_UAV_front_view_at_JASDF_Gifu_Air_Base_November_17,_2024.jpg?width=800';
-const IMG_DJI_AGRI = 'https://commons.wikimedia.org/wiki/Special:FilePath/DJI_Agriculture,_Agritechnica_2023,_Hanover_(P1160331).jpg?width=800';
-const IMG_CROP_FERTILIZER = 'https://commons.wikimedia.org/wiki/Special:FilePath/Drone_crop_fertilizer.jpg?width=800';
 const IMG_ZIPLINE = 'https://commons.wikimedia.org/wiki/Special:FilePath/Zipline_Drone_Launch.jpg?width=800';
 const IMG_FLARGO = 'https://commons.wikimedia.org/wiki/Special:FilePath/Flargo_Heavy-Lift_Drone_(quarry).jpg?width=800';
 
-function logoUrl(seed) {
-  return `https://api.dicebear.com/9.x/shapes/svg?seed=${seed}`;
-}
-
 async function resetTables() {
-  await pool.query(`TRUNCATE TABLE favorites, drone_reviews, inquiries, gallery_items, articles, drones, users, firms RESTART IDENTITY CASCADE`);
+  await pool.query(
+    `TRUNCATE TABLE newsletter_subscribers, activity_events, campaign_links, favorites, testimonials, inquiries, gallery_items, articles, drones, users RESTART IDENTITY CASCADE`
+  );
 }
 
-async function seedFirms() {
-  const rows = [
-    { key: 'aerofirm', name: 'AeroFirm Dynamics', slug: 'aerofirm-dynamics', description: 'Manufacturer of fixed-wing VTOL drones for agriculture, mapping, and emergency response.', website_url: 'https://aerofirm.example.com', contact_email: 'contact@aerofirm.example.com', contact_phone: '+40 700 000 000', location: 'Cluj-Napoca, Romania', verified: true },
-    { key: 'skybridge', name: 'SkyBridge Robotics', slug: 'skybridge-robotics', description: 'Builds long-range VTOL platforms for delivery and infrastructure inspection.', website_url: 'https://skybridge.example.com', contact_email: 'hello@skybridge.example.com', contact_phone: '+40 700 111 111', location: 'Bucharest, Romania', verified: true },
-    { key: 'meridian', name: 'Meridian Aerosystems', slug: 'meridian-aerosystems', description: 'European manufacturer specializing in mapping and surveillance-grade VTOL platforms.', website_url: 'https://meridianaero.example.com', contact_email: 'info@meridianaero.example.com', contact_phone: '+43 1 000 0000', location: 'Vienna, Austria', verified: true },
-    { key: 'vantage', name: 'Vantage UAV', slug: 'vantage-uav', description: 'Newer entrant focused on affordable inspection and agriculture VTOL drones.', website_url: 'https://vantageuav.example.com', contact_email: 'team@vantageuav.example.com', contact_phone: '+48 22 000 0000', location: 'Warsaw, Poland', verified: false },
-  ];
-
-  const ids = {};
-  for (const f of rows) {
-    const result = await pool.query(
-      `INSERT INTO firms (name, slug, description, logo_url, website_url, contact_email, contact_phone, location, verified)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-      [f.name, f.slug, f.description, logoUrl(f.slug), f.website_url, f.contact_email, f.contact_phone, f.location, f.verified]
-    );
-    ids[f.key] = result.rows[0].id;
-  }
-  return ids;
-}
-
-async function seedUsers(firmIds) {
+async function seedUsers() {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
 
   const rows = [
-    { key: 'admin', email: 'admin@vtolcampaign.com', name: 'Site Admin', role: 'admin', firm_id: null },
-    { key: 'editor', email: 'editor@vtolcampaign.com', name: 'Campaign Editor', role: 'editor', firm_id: null },
-    { key: 'aerofirmOwner', email: 'owner@aerofirm.example.com', name: 'Aerofirm Owner', role: 'firm_owner', firm_id: firmIds.aerofirm },
-    { key: 'skybridgeOwner', email: 'owner@skybridge.example.com', name: 'SkyBridge Owner', role: 'firm_owner', firm_id: firmIds.skybridge },
-    { key: 'meridianOwner', email: 'owner@meridianaero.example.com', name: 'Meridian Owner', role: 'firm_owner', firm_id: firmIds.meridian },
-    { key: 'vantageOwner', email: 'owner@vantageuav.example.com', name: 'Vantage Owner', role: 'firm_owner', firm_id: firmIds.vantage },
-    { key: 'reader1', email: 'reader1@example.com', name: 'Elena Popescu', role: 'user', firm_id: null },
-    { key: 'reader2', email: 'reader2@example.com', name: 'Marcus Ionescu', role: 'user', firm_id: null },
-    { key: 'reader3', email: 'reader3@example.com', name: 'Anca Dumitrescu', role: 'user', firm_id: null },
-    { key: 'reader4', email: 'reader4@example.com', name: 'Tudor Radu', role: 'user', firm_id: null },
-    { key: 'reader5', email: 'reader5@example.com', name: 'Ioana Marin', role: 'user', firm_id: null },
-    { key: 'reader6', email: 'reader6@example.com', name: 'Bogdan Stanciu', role: 'user', firm_id: null },
+    { key: 'admin', email: 'admin@punctuldezbor.com', name: 'Site Admin', role: 'admin', referral_source: null },
+    { key: 'editor', email: 'editor@punctuldezbor.com', name: 'Campaign Editor', role: 'editor', referral_source: null },
+    { key: 'reader1', email: 'reader1@example.com', name: 'Elena Popescu', role: 'user', referral_source: 'yt-launch' },
+    { key: 'reader2', email: 'reader2@example.com', name: 'Marcus Ionescu', role: 'user', referral_source: 'ig-teaser' },
+    { key: 'reader3', email: 'reader3@example.com', name: 'Anca Dumitrescu', role: 'user', referral_source: null },
+    { key: 'reader4', email: 'reader4@example.com', name: 'Tudor Radu', role: 'user', referral_source: 'fb-demo-day' },
+    { key: 'reader5', email: 'reader5@example.com', name: 'Ioana Marin', role: 'user', referral_source: null },
+    { key: 'reader6', email: 'reader6@example.com', name: 'Bogdan Stanciu', role: 'user', referral_source: 'yt-launch' },
   ];
 
   const ids = {};
   for (const u of rows) {
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role, firm_id)
+      `INSERT INTO users (email, password_hash, name, role, referral_source)
        VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [u.email, passwordHash, u.name, u.role, u.firm_id]
+      [u.email, passwordHash, u.name, u.role, u.referral_source]
     );
     ids[u.key] = result.rows[0].id;
   }
   return ids;
 }
 
-async function seedDrones(firmIds) {
+async function seedDrones() {
   const rows = [
-    { key: 'falcon2', firm_id: firmIds.aerofirm, name: 'Falcon-2', slug: 'falcon-2', category: 'agriculture', description: 'Fixed-wing VTOL built for crop monitoring and multispectral imaging over large fields.', price: 8500.00, wingspan_mm: 2100, weight_kg: 4.5, flight_time_min: 90, range_km: 65.0, max_speed_kmh: 110.0, payload_kg: 1.2, extra_specs: { camera: '4K gimbal', certification: 'BVLOS', battery: 'Li-ion' }, primary_image_url: IMG_DJI_AGRI },
-    { key: 'falcon1Scout', firm_id: firmIds.aerofirm, name: 'Falcon-1 Scout', slug: 'falcon-1-scout', category: 'inspection', description: 'Compact VTOL for bridge, powerline, and infrastructure inspection in tight spaces.', price: 5200.00, wingspan_mm: 1500, weight_kg: 2.8, flight_time_min: 60, range_km: 40.0, max_speed_kmh: 90.0, payload_kg: 0.8, extra_specs: { camera: '4K zoom', certification: 'BVLOS' }, primary_image_url: IMG_FLARGO },
-    { key: 'voyager', firm_id: firmIds.skybridge, name: 'SkyBridge Voyager', slug: 'skybridge-voyager', category: 'delivery', description: 'Long-range VTOL platform designed for last-mile medical and parcel delivery.', price: 12500.00, wingspan_mm: 2600, weight_kg: 6.2, flight_time_min: 120, range_km: 110.0, max_speed_kmh: 95.0, payload_kg: 2.5, extra_specs: { camera: '1080p', certification: 'Part 107', battery: 'LiPo' }, primary_image_url: IMG_ZIPLINE },
-    { key: 'sentinel', firm_id: firmIds.skybridge, name: 'SkyBridge Sentinel', slug: 'skybridge-sentinel', category: 'emergency', description: 'Thermal-equipped VTOL built for search-and-rescue operations in low visibility.', price: 15800.00, wingspan_mm: 2800, weight_kg: 7.1, flight_time_min: 105, range_km: 130.0, max_speed_kmh: 120.0, payload_kg: 1.8, extra_specs: { camera: 'thermal + 4K', certification: 'BVLOS', battery: 'Li-ion' }, primary_image_url: IMG_DELTAQUAD },
-    { key: 'mapperOne', firm_id: firmIds.meridian, name: 'Meridian MapperOne', slug: 'meridian-mapperone', category: 'mapping', description: 'Survey-grade VTOL with RGB and multispectral sensors for large-area mapping.', price: 10200.00, wingspan_mm: 2300, weight_kg: 5.0, flight_time_min: 100, range_km: 80.0, max_speed_kmh: 100.0, payload_kg: 1.5, extra_specs: { camera: 'RGB + multispectral', certification: 'EASA Open Category' }, primary_image_url: IMG_MITSUBISHI },
-    { key: 'ranger', firm_id: firmIds.meridian, name: 'Meridian Ranger', slug: 'meridian-ranger', category: 'surveillance', description: 'Long-endurance VTOL with a 30x zoom gimbal for wide-area surveillance.', price: 13400.00, wingspan_mm: 2450, weight_kg: 5.8, flight_time_min: 110, range_km: 95.0, max_speed_kmh: 115.0, payload_kg: 1.6, extra_specs: { camera: 'gimbal zoom 30x', certification: 'EASA Specific Category' }, primary_image_url: IMG_MITSUBISHI },
-    { key: 'inspectorX', firm_id: firmIds.vantage, name: 'Vantage Inspector-X', slug: 'vantage-inspector-x', category: 'inspection', description: 'Affordable VTOL with onboard LiDAR for infrastructure inspection.', price: 6100.00, wingspan_mm: 1700, weight_kg: 3.1, flight_time_min: 65, range_km: 45.0, max_speed_kmh: 92.0, payload_kg: 0.9, extra_specs: { camera: '4K + LiDAR', certification: 'pending' }, primary_image_url: IMG_FLARGO },
-    { key: 'horizon', firm_id: firmIds.vantage, name: 'Vantage Horizon', slug: 'vantage-horizon', category: 'agriculture', description: 'Entry-level agricultural VTOL for small and mid-size farms.', price: 7300.00, wingspan_mm: 1950, weight_kg: 4.0, flight_time_min: 80, range_km: 55.0, max_speed_kmh: 105.0, payload_kg: 1.0, extra_specs: { camera: 'multispectral', certification: 'pending' }, primary_image_url: IMG_CROP_FERTILIZER },
+    {
+      key: 'vimanaLs',
+      name: 'VIMANA-LS "Life Saver"',
+      slug: 'vimana-ls-life-saver',
+      subcategory: 'rescue',
+      description: "Long-endurance fixed-wing platform purpose-built for mountain and backcountry rescue, reaching terrain quadcopters can't operate in.",
+      wingspan_mm: 3000,
+      weight_kg: 7,
+      flight_time_min: 240,
+      range_km: null,
+      max_speed_kmh: null,
+      payload_kg: 2,
+      extra_specs: { camera: 'thermal + optical', certification: 'field-tested', propulsion: 'electric' },
+      primary_image_url: IMG_DELTAQUAD,
+    },
+    {
+      key: 'hfp2',
+      name: 'HFP-2 VTOL',
+      slug: 'hfp-2-vtol',
+      subcategory: 'medical',
+      description: 'VTOL long-range platform capable of vertical landing at incident sites without a runway — the flagship for time-critical medical and ambulance drops.',
+      wingspan_mm: 3850,
+      weight_kg: 25,
+      flight_time_min: 210,
+      range_km: 250,
+      max_speed_kmh: null,
+      payload_kg: 7,
+      extra_specs: { camera: 'optical + thermal', certification: 'prototype', propulsion: 'electric VTOL' },
+      primary_image_url: IMG_ZIPLINE,
+    },
+    {
+      key: 'hfp1',
+      name: 'HFP-1',
+      slug: 'hfp-1',
+      subcategory: 'police',
+      description: 'Long-range fixed-wing monitoring platform for border, perimeter, and patrol surveillance missions.',
+      wingspan_mm: 3850,
+      weight_kg: 25,
+      flight_time_min: 240,
+      range_km: 250,
+      max_speed_kmh: null,
+      payload_kg: 7,
+      extra_specs: { camera: 'optical + thermal', certification: 'production-ready', propulsion: 'electric' },
+      primary_image_url: IMG_MITSUBISHI,
+    },
+    {
+      key: 'hfp3',
+      name: 'HFP-3',
+      slug: 'hfp-3',
+      subcategory: 'police',
+      description: 'Modular-propulsion sibling to the HFP-1, trading in a combustion option for extended-endurance patrol missions.',
+      wingspan_mm: 3850,
+      weight_kg: 25,
+      flight_time_min: 240,
+      range_km: 250,
+      max_speed_kmh: null,
+      payload_kg: 7,
+      extra_specs: { camera: 'optical + thermal', certification: 'prototype', propulsion: 'modular (electric 4hr+ / combustion 7hr+)' },
+      primary_image_url: IMG_MITSUBISHI,
+    },
+    {
+      key: 'vimana',
+      name: 'VIMANA',
+      slug: 'vimana',
+      subcategory: 'medical',
+      description: "A jet-powered, high-speed airframe originally developed for rapid-interception and target-drone roles. Its speed and short-hop profile suggest a natural extension into time-critical intervention drops — such as AEDs or blood units — though this is a forward-looking application, not an existing delivery program.",
+      wingspan_mm: 1800,
+      weight_kg: 7,
+      flight_time_min: 45,
+      range_km: null,
+      max_speed_kmh: null,
+      payload_kg: 2,
+      extra_specs: { propulsion: 'jet', certification: 'prototype tested', origin: 'originally a high-speed target/interceptor platform' },
+      primary_image_url: IMG_FLARGO,
+    },
   ];
 
   const ids = {};
   for (const d of rows) {
     const result = await pool.query(
-      `INSERT INTO drones (firm_id, name, slug, category, description, price, wingspan_mm, weight_kg, flight_time_min, range_km, max_speed_kmh, payload_kg, extra_specs, primary_image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
-      [d.firm_id, d.name, d.slug, d.category, d.description, d.price, d.wingspan_mm, d.weight_kg, d.flight_time_min, d.range_km, d.max_speed_kmh, d.payload_kg, JSON.stringify(d.extra_specs), d.primary_image_url]
+      `INSERT INTO drones (name, slug, subcategory, description, wingspan_mm, weight_kg, flight_time_min, range_km, max_speed_kmh, payload_kg, extra_specs, primary_image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+      [
+        d.name,
+        d.slug,
+        d.subcategory,
+        d.description,
+        d.wingspan_mm,
+        d.weight_kg,
+        d.flight_time_min,
+        d.range_km,
+        d.max_speed_kmh,
+        d.payload_kg,
+        JSON.stringify(d.extra_specs),
+        d.primary_image_url,
+      ]
     );
     ids[d.key] = result.rows[0].id;
   }
   return ids;
 }
 
-async function seedArticles(userIds, droneIds, firmIds) {
+async function seedArticles(userIds, droneIds) {
   const rows = [
-    { key: 'emergencyResponse', title: 'Why Fixed-Wing VTOL Is Changing Rural Emergency Response', slug: 'why-fixed-wing-vtol-changing-rural-emergency-response', body: 'A look at how VTOL drones combine the range of fixed-wing aircraft with the launch flexibility of multirotors to reach remote areas in minutes rather than hours.', author_id: userIds.editor, category: 'research', status: 'published', featured_image_url: IMG_DELTAQUAD, related_drone_id: null, related_firm_id: null },
-    { key: 'falcon2Review', title: 'Falcon-2 Review: A Season in the Field', slug: 'falcon-2-review-season-in-the-field', body: 'We followed a crop-monitoring team using the Falcon-2 for a full growing season. Here is what held up, and what did not.', author_id: userIds.editor, category: 'review', status: 'published', featured_image_url: IMG_DJI_AGRI, related_drone_id: droneIds.falcon2, related_firm_id: firmIds.aerofirm },
-    { key: 'sentinelInside', title: 'Inside SkyBridge Sentinel: Built for Search and Rescue', slug: 'inside-skybridge-sentinel-search-and-rescue', body: "A closer look at the thermal payload and endurance tradeoffs behind SkyBridge's newest rescue-focused platform.", author_id: userIds.editor, category: 'review', status: 'published', featured_image_url: IMG_DELTAQUAD, related_drone_id: droneIds.sentinel, related_firm_id: firmIds.skybridge },
-    { key: 'mapperOneScale', title: 'Mapping at Scale: How MapperOne Cuts Survey Time in Half', slug: 'mapping-at-scale-mapperone-survey-time', body: "Meridian's multispectral payload and flight-planning software are shaving days off large-area survey projects, according to three early customers.", author_id: userIds.admin, category: 'research', status: 'published', featured_image_url: IMG_MITSUBISHI, related_drone_id: droneIds.mapperOne, related_firm_id: firmIds.meridian },
-    { key: 'economics', title: 'The Economics of Fixed-Wing VTOL: Is It Worth the Premium?', slug: 'economics-of-fixed-wing-vtol-premium', body: 'Fixed-wing VTOL platforms cost more upfront than standard multirotors. We break down total cost of ownership across a three-year operating window.', author_id: userIds.editor, category: 'research', status: 'draft', featured_image_url: IMG_FLARGO, related_drone_id: null, related_firm_id: null },
+    { key: 'ruralEmergency', title: 'Why Fixed-Wing VTOL Is Changing Rural Emergency Response', slug: 'why-fixed-wing-vtol-changing-rural-emergency-response', body: 'A look at how VTOL drones combine the range of fixed-wing aircraft with the launch flexibility of multirotors to reach remote areas in minutes rather than hours.', author_id: userIds.editor, category: 'research', status: 'published', featured_image_url: IMG_DELTAQUAD, related_drone_id: null },
+    { key: 'vimanaLsInside', title: "Inside VIMANA-LS: Reaching Where Quadcopters Can't", slug: 'inside-vimana-ls-reaching-where-quadcopters-cant', body: 'A closer look at the endurance and sensor tradeoffs behind the mountain-rescue platform, and what search-and-rescue teams have found in the field.', author_id: userIds.editor, category: 'review', status: 'published', featured_image_url: IMG_DELTAQUAD, related_drone_id: droneIds.vimanaLs },
+    { key: 'hfp2MedicalFlagship', title: 'Building HFP-2: A VTOL Platform for the First Golden Hour', slug: 'building-hfp-2-vtol-first-golden-hour', body: 'Vertical takeoff and landing means no drop zone and no circling — just a direct landing at the scene. Here is why that matters for time-critical medical response.', author_id: userIds.admin, category: 'research', status: 'published', featured_image_url: IMG_ZIPLINE, related_drone_id: droneIds.hfp2 },
+    { key: 'patrolAtRange', title: 'Patrol at Range: What the HFP-1 Brings to Border and Perimeter Security', slug: 'patrol-at-range-hfp-1-border-perimeter-security', body: 'Four-plus hours of loiter time changes how a single platform can cover a patrol route. A look at the endurance tradeoffs behind the HFP-1.', author_id: userIds.editor, category: 'review', status: 'published', featured_image_url: IMG_MITSUBISHI, related_drone_id: droneIds.hfp1 },
+    { key: 'economics', title: 'The Economics of Fixed-Wing VTOL: Is It Worth the Premium?', slug: 'economics-of-fixed-wing-vtol-premium', body: 'Fixed-wing VTOL platforms cost more upfront than standard multirotors. We break down total cost of ownership across a three-year operating window.', author_id: userIds.editor, category: 'research', status: 'draft', featured_image_url: IMG_FLARGO, related_drone_id: null },
   ];
 
   const ids = {};
   for (const a of rows) {
     const result = await pool.query(
-      `INSERT INTO articles (title, slug, body, author_id, category, status, featured_image_url, related_drone_id, related_firm_id, published_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
-      [a.title, a.slug, a.body, a.author_id, a.category, a.status, a.featured_image_url, a.related_drone_id, a.related_firm_id, a.status === 'published' ? new Date() : null]
+      `INSERT INTO articles (title, slug, body, author_id, category, status, featured_image_url, related_drone_id, published_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [a.title, a.slug, a.body, a.author_id, a.category, a.status, a.featured_image_url, a.related_drone_id, a.status === 'published' ? new Date() : null]
     );
     ids[a.key] = result.rows[0].id;
   }
   return ids;
 }
 
-async function seedGalleryItems(droneIds, firmIds) {
+async function seedGalleryItems(droneIds) {
   const rows = [
-    { title: 'Coastal Search & Rescue Demo', description: 'SkyBridge Sentinel locating a stranded hiker in under 8 minutes.', media_url: IMG_DELTAQUAD, media_type: 'image', category: 'emergency', drone_id: droneIds.sentinel, firm_id: firmIds.skybridge },
-    { title: 'Crop Health Flyover', description: 'Multispectral pass over a 40-hectare wheat field.', media_url: IMG_DJI_AGRI, media_type: 'image', category: 'agriculture', drone_id: droneIds.falcon2, firm_id: firmIds.aerofirm },
-    { title: 'Rural Medical Delivery', description: 'SkyBridge Voyager delivering insulin to a clinic with no road access.', media_url: IMG_ZIPLINE, media_type: 'image', category: 'delivery', drone_id: droneIds.voyager, firm_id: firmIds.skybridge },
-    { title: 'Bridge Inspection Pass', description: 'Falcon-1 Scout hovering under a bridge deck for close-up structural imaging.', media_url: IMG_FLARGO, media_type: 'image', category: 'inspection', drone_id: droneIds.falcon1Scout, firm_id: firmIds.aerofirm },
-    { title: 'Vineyard Survey Flight', description: 'Vantage Horizon mapping vine health across a hillside vineyard.', media_url: IMG_CROP_FERTILIZER, media_type: 'image', category: 'agriculture', drone_id: droneIds.horizon, firm_id: firmIds.vantage },
-    { title: 'City Infrastructure Mapping', description: 'MapperOne building a 3D model of a city block for planning review.', media_url: IMG_MITSUBISHI, media_type: 'image', category: 'mapping', drone_id: droneIds.mapperOne, firm_id: firmIds.meridian },
-    { title: 'Night Surveillance Patrol', description: 'Meridian Ranger on a perimeter patrol using its zoom gimbal at dusk.', media_url: IMG_DELTAQUAD, media_type: 'image', category: 'surveillance', drone_id: droneIds.ranger, firm_id: firmIds.meridian },
-    { title: 'Powerline Corridor Inspection', description: 'Vantage Inspector-X scanning a powerline corridor with onboard LiDAR.', media_url: IMG_FLARGO, media_type: 'image', category: 'inspection', drone_id: droneIds.inspectorX, firm_id: firmIds.vantage },
-    { title: '#SkyWithoutRunways Launch Event', description: 'Community turnout for the campaign launch, watching a live VTOL transition demo.', media_url: IMG_MITSUBISHI, media_type: 'image', category: 'campaign', drone_id: null, firm_id: null },
-    { title: 'Community Demo Day — Local Farmers', description: 'Local farmers trying out VTOL flight-planning software during a hands-on demo day.', media_url: IMG_DJI_AGRI, media_type: 'image', category: 'campaign', drone_id: null, firm_id: null },
+    { title: 'Ridge Line Rescue Demo', description: 'VIMANA-LS locating a stranded hiker during a live mountain rescue exercise.', media_url: IMG_DELTAQUAD, media_type: 'image', category: 'rescue', drone_id: droneIds.vimanaLs },
+    { title: 'Golden Hour Response', description: 'HFP-2 completing a vertical landing at a simulated roadside trauma scene.', media_url: IMG_ZIPLINE, media_type: 'image', category: 'medical', drone_id: droneIds.hfp2 },
+    { title: 'Perimeter Overwatch', description: 'HFP-1 holding a four-hour patrol loiter during a joint police exercise.', media_url: IMG_MITSUBISHI, media_type: 'image', category: 'police', drone_id: droneIds.hfp1 },
+    { title: 'Extended-Endurance Patrol', description: 'HFP-3 running its combustion propulsion mode during an overnight patrol demonstration.', media_url: IMG_MITSUBISHI, media_type: 'image', category: 'police', drone_id: droneIds.hfp3 },
+    { title: 'Rapid-Response Concept Flight', description: "VIMANA during a speed trial exploring its potential for time-critical drops.", media_url: IMG_FLARGO, media_type: 'image', category: 'medical', drone_id: droneIds.vimana },
+    { title: 'Night Thermal Search Pass', description: 'VIMANA-LS running a thermal search pattern over forested terrain at dusk.', media_url: IMG_DELTAQUAD, media_type: 'image', category: 'rescue', drone_id: droneIds.vimanaLs },
+    { title: '#PunctulDeZbor Demo Day', description: 'Community turnout watching a live VTOL transition demo at the campaign launch event.', media_url: IMG_MITSUBISHI, media_type: 'image', category: 'campaign', drone_id: null },
+    { title: 'Behind the Build — Assembly Floor', description: 'A look at the assembly process ahead of demo day.', media_url: IMG_FLARGO, media_type: 'image', category: 'campaign', drone_id: null },
   ];
 
   for (const g of rows) {
     await pool.query(
-      `INSERT INTO gallery_items (title, description, media_url, media_type, category, drone_id, firm_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [g.title, g.description, g.media_url, g.media_type, g.category, g.drone_id, g.firm_id]
+      `INSERT INTO gallery_items (title, description, media_url, media_type, category, drone_id)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [g.title, g.description, g.media_url, g.media_type, g.category, g.drone_id]
     );
   }
 }
 
-async function seedInquiries(userIds, droneIds, firmIds) {
+async function seedInquiries(userIds, droneIds) {
   const rows = [
-    { user_id: userIds.reader1, firm_id: firmIds.aerofirm, drone_id: droneIds.falcon2, message: 'Interested in the Falcon-2 for a 200-hectare vineyard. Can you send pricing for a fleet of 3?', status: 'new' },
-    { user_id: userIds.reader2, firm_id: firmIds.skybridge, drone_id: droneIds.voyager, message: 'What is the maximum payload for cold-chain medical deliveries?', status: 'contacted' },
-    { user_id: userIds.reader3, firm_id: firmIds.meridian, drone_id: droneIds.mapperOne, message: 'Does the MapperOne meet EASA requirements for surveying near populated areas?', status: 'closed' },
-    { user_id: userIds.reader1, firm_id: firmIds.vantage, drone_id: droneIds.inspectorX, message: 'When is BVLOS certification for the Inspector-X expected to be finalized?', status: 'new' },
-    { user_id: userIds.reader4, firm_id: firmIds.aerofirm, drone_id: droneIds.falcon1Scout, message: 'Do you offer bulk pricing for 10 units for a utility company?', status: 'new' },
-    { user_id: userIds.reader5, firm_id: firmIds.skybridge, drone_id: droneIds.sentinel, message: 'What is the resolution on the thermal camera?', status: 'contacted' },
-    { user_id: userIds.reader6, firm_id: firmIds.meridian, drone_id: droneIds.ranger, message: 'What is the effective zoom range on the gimbal, in kilometers?', status: 'new' },
-    { user_id: userIds.reader2, firm_id: firmIds.vantage, drone_id: droneIds.horizon, message: 'Do you offer financing options for small farm operators?', status: 'new' },
-    { user_id: userIds.reader3, firm_id: firmIds.aerofirm, drone_id: droneIds.falcon2, message: 'What is the warranty period and what does support include?', status: 'closed' },
-    { user_id: userIds.reader6, firm_id: firmIds.skybridge, drone_id: droneIds.voyager, message: 'What are the cargo bay dimensions for standard parcels?', status: 'contacted' },
+    { user_id: userIds.reader1, drone_id: droneIds.vimanaLs, message: 'What is the maximum wind speed VIMANA-LS is rated for during search operations at altitude?', status: 'new' },
+    { user_id: userIds.reader2, drone_id: droneIds.hfp2, message: 'Can the HFP-2 carry a cold-chain container for blood products, and if so what is the maximum duration before temperature becomes a concern?', status: 'contacted' },
+    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: "Do you offer a package for a county sheriff's department looking to replace two aging fixed-wing patrol platforms?", status: 'new' },
+    { user_id: userIds.reader1, drone_id: droneIds.hfp3, message: 'What is the lead time on the combustion propulsion module for HFP-3?', status: 'new' },
+    { user_id: userIds.reader4, drone_id: droneIds.vimana, message: 'Is VIMANA available for evaluation as a rapid-response asset, or is it still defense-only?', status: 'new' },
+    { user_id: userIds.reader5, drone_id: droneIds.vimanaLs, message: 'What certifications does VIMANA-LS currently hold for operating in EU alpine airspace?', status: 'contacted' },
+    { user_id: userIds.reader6, drone_id: droneIds.hfp2, message: 'Can the HFP-2 be configured for both medical and light cargo drops on the same airframe?', status: 'closed' },
+    { user_id: userIds.reader2, drone_id: null, message: 'We are a regional EMS provider evaluating VTOL delivery generally — could someone walk us through pricing and pilot-training requirements?', status: 'new' },
+    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: 'What is the warranty period on the HFP-1 airframe and sensor payload?', status: 'closed' },
+    { user_id: userIds.reader6, drone_id: droneIds.hfp3, message: 'Do you have case studies from any police aviation units currently operating HFP-3?', status: 'contacted' },
   ];
 
   for (const i of rows) {
     await pool.query(
-      `INSERT INTO inquiries (user_id, firm_id, drone_id, message, status)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [i.user_id, i.firm_id, i.drone_id, i.message, i.status]
+      `INSERT INTO inquiries (user_id, drone_id, message, status)
+       VALUES ($1, $2, $3, $4)`,
+      [i.user_id, i.drone_id, i.message, i.status]
     );
   }
 }
 
-async function seedDroneReviews(userIds, droneIds) {
+async function seedTestimonials(droneIds) {
   const rows = [
-    { drone_id: droneIds.falcon2, user_id: userIds.reader1, rating: 5, body: 'Reliable in high winds and the multispectral data quality is excellent for the price point.' },
-    { drone_id: droneIds.falcon2, user_id: userIds.reader2, rating: 4, body: 'Great flight time, but the companion software could use some polish.' },
-    { drone_id: droneIds.falcon1Scout, user_id: userIds.reader3, rating: 4, body: 'Compact enough to launch from tight sites, holds up well in gusty conditions near structures.' },
-    { drone_id: droneIds.falcon1Scout, user_id: userIds.reader4, rating: 5, body: 'The zoom camera catches hairline cracks we would have missed from the ground.' },
-    { drone_id: droneIds.voyager, user_id: userIds.reader5, rating: 5, body: 'Delivered supplies to our clinic without issue across five flights so far.' },
-    { drone_id: droneIds.voyager, user_id: userIds.reader1, rating: 4, body: 'Solid range, though the cargo bay is smaller than I expected for the price.' },
-    { drone_id: droneIds.sentinel, user_id: userIds.reader2, rating: 5, body: 'The thermal camera made the real difference during an actual search operation.' },
-    { drone_id: droneIds.sentinel, user_id: userIds.reader6, rating: 4, body: 'Excellent low-light performance, battery life could be a bit longer for extended searches.' },
-    { drone_id: droneIds.mapperOne, user_id: userIds.reader3, rating: 3, body: 'Solid mapping accuracy, but initial setup took longer than advertised.' },
-    { drone_id: droneIds.mapperOne, user_id: userIds.reader5, rating: 4, body: 'Multispectral data has been genuinely useful for early-season stress detection.' },
-    { drone_id: droneIds.ranger, user_id: userIds.reader4, rating: 5, body: 'The 30x zoom is genuinely impressive at range, very stable gimbal.' },
-    { drone_id: droneIds.ranger, user_id: userIds.reader6, rating: 4, body: 'Long endurance is the standout feature, worth the higher price for our patrol routes.' },
-    { drone_id: droneIds.inspectorX, user_id: userIds.reader1, rating: 4, body: 'Good value for the price point — the LiDAR data comes out clean.' },
-    { drone_id: droneIds.inspectorX, user_id: userIds.reader3, rating: 5, body: 'Surprised by how much this outperforms its price bracket on inspection detail.' },
-    { drone_id: droneIds.horizon, user_id: userIds.reader2, rating: 4, body: 'A good entry point for a smaller farm, easy to fly out of the box.' },
-    { drone_id: droneIds.horizon, user_id: userIds.reader5, rating: 5, body: 'Exactly what we needed to start mapping without a big upfront investment.' },
+    { drone_id: droneIds.vimanaLs, agency_name: 'Cascade County Search & Rescue', contact_title: 'Operations Chief', quote: 'We reached a hiker with a broken leg eleven kilometers up a ridge in under twenty minutes. A ground team would have taken most of the day.', outcome: 'Located and confirmed a stranded hiker in low visibility, cutting response time from an estimated 4+ hours on foot to under 20 minutes.', featured: true },
+    { drone_id: droneIds.vimanaLs, agency_name: 'Northridge Mountain Rescue Volunteers', contact_title: 'Team Lead', quote: 'Its ability to launch and land off a switchback road saved us from a two-hour hike just to get eyes in the air.', outcome: 'Enabled rapid deployment from a roadside launch point in terrain with no flat ground for a runway.', featured: false },
+    { drone_id: droneIds.hfp2, agency_name: 'Northgate Regional EMS', contact_title: 'Medical Director', quote: 'Landing directly at the scene instead of circling for a drop zone means our AED gets to the patient minutes sooner.', outcome: 'Cut defibrillator delivery time to a rural cardiac-arrest call by approximately 6 minutes versus the nearest ambulance unit.', featured: true },
+    { drone_id: droneIds.hfp2, agency_name: 'Truvale County Blood Services', contact_title: 'Logistics Coordinator', quote: 'We moved a cross-matched unit between two rural hospitals faster than our courier van could clear traffic.', outcome: 'Delivered a time-sensitive blood unit between facilities 40km apart in under 25 minutes.', featured: false },
+    { drone_id: droneIds.hfp1, agency_name: "Meridian County Sheriff's Office", contact_title: 'Air Support Unit Commander', quote: 'Four hours of loiter time over a perimeter means one platform covers what used to take two crews in relief shifts.', outcome: 'Maintained continuous overwatch on an active perimeter search for a full shift without a mid-mission swap.', featured: true },
+    { drone_id: droneIds.hfp1, agency_name: 'Portstead Border Patrol Division', contact_title: 'Field Operations Supervisor', quote: 'Long endurance let us watch a stretch of border overnight without repositioning a crewed aircraft.', outcome: 'Extended unbroken surveillance coverage of a border segment through a full overnight shift.', featured: false },
+    { drone_id: droneIds.hfp3, agency_name: 'Westfield Regional Police Aviation Unit', contact_title: 'Unit Commander', quote: 'The combustion mode gave us a full extra patrol cycle before we had to bring it in.', outcome: 'Extended a single patrol sortie from roughly four hours to over seven using the combustion propulsion mode.', featured: false },
   ];
 
-  for (const r of rows) {
+  for (const t of rows) {
     await pool.query(
-      `INSERT INTO drone_reviews (drone_id, user_id, rating, body)
-       VALUES ($1, $2, $3, $4)`,
-      [r.drone_id, r.user_id, r.rating, r.body]
+      `INSERT INTO testimonials (drone_id, agency_name, contact_title, quote, outcome, featured)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [t.drone_id, t.agency_name, t.contact_title, t.quote, t.outcome, t.featured]
     );
   }
 }
 
-async function seedFavorites(userIds, droneIds, firmIds, articleIds) {
+async function seedFavorites(userIds, droneIds, articleIds) {
   const rows = [
-    { user_id: userIds.reader1, item_type: 'drone', item_id: droneIds.falcon2 },
-    { user_id: userIds.reader1, item_type: 'drone', item_id: droneIds.voyager },
-    { user_id: userIds.reader1, item_type: 'firm', item_id: firmIds.aerofirm },
-    { user_id: userIds.reader2, item_type: 'drone', item_id: droneIds.sentinel },
-    { user_id: userIds.reader2, item_type: 'article', item_id: articleIds.emergencyResponse },
-    { user_id: userIds.reader3, item_type: 'drone', item_id: droneIds.mapperOne },
-    { user_id: userIds.reader3, item_type: 'firm', item_id: firmIds.meridian },
-    { user_id: userIds.reader4, item_type: 'drone', item_id: droneIds.ranger },
-    { user_id: userIds.reader5, item_type: 'drone', item_id: droneIds.horizon },
-    { user_id: userIds.reader5, item_type: 'drone', item_id: droneIds.falcon1Scout },
-    { user_id: userIds.reader6, item_type: 'firm', item_id: firmIds.skybridge },
+    { user_id: userIds.reader1, item_type: 'drone', item_id: droneIds.vimanaLs },
+    { user_id: userIds.reader1, item_type: 'drone', item_id: droneIds.hfp2 },
+    { user_id: userIds.reader1, item_type: 'article', item_id: articleIds.vimanaLsInside },
+    { user_id: userIds.reader2, item_type: 'drone', item_id: droneIds.hfp1 },
+    { user_id: userIds.reader2, item_type: 'article', item_id: articleIds.ruralEmergency },
+    { user_id: userIds.reader3, item_type: 'drone', item_id: droneIds.hfp2 },
+    { user_id: userIds.reader4, item_type: 'drone', item_id: droneIds.hfp3 },
+    { user_id: userIds.reader5, item_type: 'drone', item_id: droneIds.vimana },
+    { user_id: userIds.reader5, item_type: 'drone', item_id: droneIds.vimanaLs },
+    { user_id: userIds.reader6, item_type: 'article', item_id: articleIds.patrolAtRange },
   ];
 
   for (const f of rows) {
@@ -212,17 +252,85 @@ async function seedFavorites(userIds, droneIds, firmIds, articleIds) {
   }
 }
 
+async function seedCampaignLinks() {
+  const rows = [
+    { key: 'ytLaunch', slug: 'yt-launch', platform: 'youtube', destination_path: '/' },
+    { key: 'fbDemoDay', slug: 'fb-demo-day', platform: 'facebook', destination_path: '/drones' },
+    { key: 'igTeaser', slug: 'ig-teaser', platform: 'instagram', destination_path: '/articles/inside-vimana-ls-reaching-where-quadcopters-cant' },
+    { key: 'ytRescueDeepdive', slug: 'yt-rescue-deepdive', platform: 'youtube', destination_path: '/articles/building-hfp-2-vtol-first-golden-hour' },
+  ];
+
+  const ids = {};
+  for (const c of rows) {
+    const result = await pool.query(
+      `INSERT INTO campaign_links (slug, platform, destination_path)
+       VALUES ($1, $2, $3) RETURNING id`,
+      [c.slug, c.platform, c.destination_path]
+    );
+    ids[c.key] = result.rows[0].id;
+  }
+  return ids;
+}
+
+async function seedNewsletterSubscribers(userIds) {
+  const rows = [
+    { email: 'newsletter1@example.com', referral_source: 'yt-launch', user_id: userIds.reader1 },
+    { email: 'newsletter2@example.com', referral_source: 'ig-teaser', user_id: null },
+    { email: 'newsletter3@example.com', referral_source: null, user_id: userIds.reader3 },
+    { email: 'newsletter4@example.com', referral_source: 'fb-demo-day', user_id: null },
+    { email: 'newsletter5@example.com', referral_source: 'yt-rescue-deepdive', user_id: null },
+  ];
+
+  for (const n of rows) {
+    await pool.query(
+      `INSERT INTO newsletter_subscribers (email, referral_source, user_id)
+       VALUES ($1, $2, $3)`,
+      [n.email, n.referral_source, n.user_id]
+    );
+  }
+}
+
+async function seedActivityEvents(userIds, droneIds, articleIds, campaignLinkIds) {
+  const rows = [
+    { user_id: null, anon_id: 'anon-001', event_type: 'view', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: 'ig-teaser' },
+    { user_id: null, anon_id: 'anon-002', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp2, referral_source: 'fb-demo-day' },
+    { user_id: userIds.reader1, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: null },
+    { user_id: userIds.reader1, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: null },
+    { user_id: userIds.reader1, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.hfp2, referral_source: null },
+    { user_id: null, anon_id: 'anon-003', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp1, referral_source: null },
+    { user_id: userIds.reader2, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.hfp1, referral_source: 'yt-launch' },
+    { user_id: userIds.reader2, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.hfp1, referral_source: null },
+    { user_id: null, anon_id: 'anon-004', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp3, referral_source: null },
+    { user_id: null, anon_id: 'anon-005', event_type: 'view', target_type: 'drone', target_id: droneIds.vimana, referral_source: 'yt-rescue-deepdive' },
+    { user_id: userIds.reader3, anon_id: null, event_type: 'view', target_type: 'article', target_id: articleIds.ruralEmergency, referral_source: null },
+    { user_id: null, anon_id: 'anon-006', event_type: 'campaign_redirect', target_type: 'campaign_link', target_id: campaignLinkIds.ytLaunch, referral_source: 'yt-launch' },
+    { user_id: null, anon_id: 'anon-007', event_type: 'campaign_redirect', target_type: 'campaign_link', target_id: campaignLinkIds.igTeaser, referral_source: 'ig-teaser' },
+    { user_id: userIds.reader4, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.hfp3, referral_source: null },
+    { user_id: userIds.reader5, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.vimana, referral_source: null },
+  ];
+
+  for (const e of rows) {
+    await pool.query(
+      `INSERT INTO activity_events (user_id, anon_id, event_type, target_type, target_id, referral_source)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [e.user_id, e.anon_id, e.event_type, e.target_type, e.target_id, e.referral_source]
+    );
+  }
+}
+
 async function main() {
   try {
     await resetTables();
-    const firmIds = await seedFirms();
-    const userIds = await seedUsers(firmIds);
-    const droneIds = await seedDrones(firmIds);
-    const articleIds = await seedArticles(userIds, droneIds, firmIds);
-    await seedGalleryItems(droneIds, firmIds);
-    await seedInquiries(userIds, droneIds, firmIds);
-    await seedDroneReviews(userIds, droneIds);
-    await seedFavorites(userIds, droneIds, firmIds, articleIds);
+    const userIds = await seedUsers();
+    const droneIds = await seedDrones();
+    const articleIds = await seedArticles(userIds, droneIds);
+    await seedGalleryItems(droneIds);
+    await seedInquiries(userIds, droneIds);
+    await seedTestimonials(droneIds);
+    await seedFavorites(userIds, droneIds, articleIds);
+    const campaignLinkIds = await seedCampaignLinks();
+    await seedNewsletterSubscribers(userIds);
+    await seedActivityEvents(userIds, droneIds, articleIds, campaignLinkIds);
     console.log(`Every seeded user's password is: ${SEED_PASSWORD}`);
   } catch (err) {
     console.error('Seeding failed:', err);

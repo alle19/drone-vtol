@@ -16,7 +16,7 @@ export default function Drones() {
     <div>
       <h1 className="text-2xl font-semibold mb-6">Drones</h1>
       <div className="flex flex-wrap gap-3 mb-6">
-        <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="border border-neutral-300 rounded-md px-3 py-2 text-sm">
+        <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="border border-neutral-300 rounded-md px-3 py-2">
           <option value="">All categories</option>
           <option value="rescue">Rescue</option>
           <option value="police">Police</option>

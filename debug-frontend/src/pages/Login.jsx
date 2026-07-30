@@ -34,7 +34,7 @@ export default function Login() {
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-neutral-300 rounded-md px-3 py-2" required />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border border-neutral-300 rounded-md px-3 py-2" required />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" className="w-full bg-neutral-900 text-white rounded-md py-2 font-medium">Log in</button>
+        <button type="submit" className="w-full min-h-11 flex items-center justify-center bg-neutral-900 text-white rounded-md font-medium">Log in</button>
       </form>
       <p className="text-sm text-neutral-600 mt-4">No account? <Link to="/signup" className="text-beacon">Sign up</Link></p>
     </div>

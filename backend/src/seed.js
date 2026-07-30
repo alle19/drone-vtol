@@ -3,6 +3,21 @@ const pool = require('./db');
 
 const SEED_PASSWORD = 'TestPass123!';
 
+const NOW = new Date();
+
+// Backdate helper: `daysAgo` days before the seed run, at a fixed hour/minute so
+// times within the same day are still distinct and ordered.
+function daysAgo(days, hour = 12, minute = 0) {
+  const d = new Date(NOW);
+  d.setDate(d.getDate() - days);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
+function hoursAfter(date, hours) {
+  return new Date(date.getTime() + hours * 60 * 60 * 1000);
+}
+
 const IMG_DELTAQUAD = 'https://commons.wikimedia.org/wiki/Special:FilePath/DeltaQuad_VTOL_surveillance_UAV.jpg?width=800';
 const IMG_MITSUBISHI = 'https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi_Fixed-wing_VTOL_UAV_front_view_at_JASDF_Gifu_Air_Base_November_17,_2024.jpg?width=800';
 const IMG_ZIPLINE = 'https://commons.wikimedia.org/wiki/Special:FilePath/Zipline_Drone_Launch.jpg?width=800';
@@ -17,23 +32,26 @@ async function resetTables() {
 async function seedUsers() {
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10);
 
+  // created_at is backdated to spread signups across the last 30 days instead of
+  // clustering on seed-run time; each reader's join date lands shortly after the
+  // campaign bump tied to their referral_source (see seedActivityEvents).
   const rows = [
-    { key: 'admin', email: 'admin@punctuldezbor.com', name: 'Site Admin', role: 'admin', referral_source: null },
-    { key: 'editor', email: 'editor@punctuldezbor.com', name: 'Campaign Editor', role: 'editor', referral_source: null },
-    { key: 'reader1', email: 'reader1@example.com', name: 'Elena Popescu', role: 'user', referral_source: 'yt-launch' },
-    { key: 'reader2', email: 'reader2@example.com', name: 'Marcus Ionescu', role: 'user', referral_source: 'ig-teaser' },
-    { key: 'reader3', email: 'reader3@example.com', name: 'Anca Dumitrescu', role: 'user', referral_source: null },
-    { key: 'reader4', email: 'reader4@example.com', name: 'Tudor Radu', role: 'user', referral_source: 'fb-demo-day' },
-    { key: 'reader5', email: 'reader5@example.com', name: 'Ioana Marin', role: 'user', referral_source: null },
-    { key: 'reader6', email: 'reader6@example.com', name: 'Bogdan Stanciu', role: 'user', referral_source: 'yt-launch' },
+    { key: 'admin', email: 'admin@punctuldezbor.com', name: 'Site Admin', role: 'admin', referral_source: null, created_at: daysAgo(29, 8, 0) },
+    { key: 'editor', email: 'editor@punctuldezbor.com', name: 'Campaign Editor', role: 'editor', referral_source: null, created_at: daysAgo(28, 9, 30) },
+    { key: 'reader3', email: 'reader3@example.com', name: 'Anca Dumitrescu', role: 'user', referral_source: null, created_at: daysAgo(27, 14, 0) },
+    { key: 'reader1', email: 'reader1@example.com', name: 'Elena Popescu', role: 'user', referral_source: 'yt-launch', created_at: daysAgo(23, 19, 0) },
+    { key: 'reader6', email: 'reader6@example.com', name: 'Bogdan Stanciu', role: 'user', referral_source: 'yt-launch', created_at: daysAgo(21, 20, 45) },
+    { key: 'reader4', email: 'reader4@example.com', name: 'Tudor Radu', role: 'user', referral_source: 'fb-demo-day', created_at: daysAgo(13, 21, 15) },
+    { key: 'reader5', email: 'reader5@example.com', name: 'Ioana Marin', role: 'user', referral_source: null, created_at: daysAgo(9, 11, 0) },
+    { key: 'reader2', email: 'reader2@example.com', name: 'Marcus Ionescu', role: 'user', referral_source: 'ig-teaser', created_at: daysAgo(4, 17, 30) },
   ];
 
   const ids = {};
   for (const u of rows) {
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role, referral_source)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [u.email, passwordHash, u.name, u.role, u.referral_source]
+      `INSERT INTO users (email, password_hash, name, role, referral_source, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [u.email, passwordHash, u.name, u.role, u.referral_source, u.created_at]
     );
     ids[u.key] = result.rows[0].id;
   }
@@ -187,24 +205,28 @@ async function seedGalleryItems(droneIds) {
 }
 
 async function seedInquiries(userIds, droneIds) {
+  // created_at is backdated across the 30-day window; contacted_at (only for
+  // 'contacted'/'closed' rows) is created_at plus a multi-hour gap, always with
+  // enough margin that the gap still lands before "now".
   const rows = [
-    { user_id: userIds.reader1, drone_id: droneIds.vimanaLs, message: 'What is the maximum wind speed VIMANA-LS is rated for during search operations at altitude?', status: 'new' },
-    { user_id: userIds.reader2, drone_id: droneIds.hfp2, message: 'Can the HFP-2 carry a cold-chain container for blood products, and if so what is the maximum duration before temperature becomes a concern?', status: 'contacted' },
-    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: "Do you offer a package for a county sheriff's department looking to replace two aging fixed-wing patrol platforms?", status: 'new' },
-    { user_id: userIds.reader1, drone_id: droneIds.hfp3, message: 'What is the lead time on the combustion propulsion module for HFP-3?', status: 'new' },
-    { user_id: userIds.reader4, drone_id: droneIds.vimana, message: 'Is VIMANA available for evaluation as a rapid-response asset, or is it still defense-only?', status: 'new' },
-    { user_id: userIds.reader5, drone_id: droneIds.vimanaLs, message: 'What certifications does VIMANA-LS currently hold for operating in EU alpine airspace?', status: 'contacted' },
-    { user_id: userIds.reader6, drone_id: droneIds.hfp2, message: 'Can the HFP-2 be configured for both medical and light cargo drops on the same airframe?', status: 'closed' },
-    { user_id: userIds.reader2, drone_id: null, message: 'We are a regional EMS provider evaluating VTOL delivery generally — could someone walk us through pricing and pilot-training requirements?', status: 'new' },
-    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: 'What is the warranty period on the HFP-1 airframe and sensor payload?', status: 'closed' },
-    { user_id: userIds.reader6, drone_id: droneIds.hfp3, message: 'Do you have case studies from any police aviation units currently operating HFP-3?', status: 'contacted' },
+    { user_id: userIds.reader1, drone_id: droneIds.vimanaLs, message: 'What is the maximum wind speed VIMANA-LS is rated for during search operations at altitude?', status: 'new', created_at: daysAgo(22, 10, 0) },
+    { user_id: userIds.reader2, drone_id: droneIds.hfp2, message: 'Can the HFP-2 carry a cold-chain container for blood products, and if so what is the maximum duration before temperature becomes a concern?', status: 'contacted', created_at: daysAgo(19, 9, 0), contactedGapHours: 14 },
+    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: "Do you offer a package for a county sheriff's department looking to replace two aging fixed-wing patrol platforms?", status: 'new', created_at: daysAgo(17, 15, 30) },
+    { user_id: userIds.reader1, drone_id: droneIds.hfp3, message: 'What is the lead time on the combustion propulsion module for HFP-3?', status: 'new', created_at: daysAgo(16, 8, 45) },
+    { user_id: userIds.reader4, drone_id: droneIds.vimana, message: 'Is VIMANA available for evaluation as a rapid-response asset, or is it still defense-only?', status: 'new', created_at: daysAgo(12, 13, 0) },
+    { user_id: userIds.reader5, drone_id: droneIds.vimanaLs, message: 'What certifications does VIMANA-LS currently hold for operating in EU alpine airspace?', status: 'contacted', created_at: daysAgo(11, 16, 0), contactedGapHours: 26 },
+    { user_id: userIds.reader6, drone_id: droneIds.hfp2, message: 'Can the HFP-2 be configured for both medical and light cargo drops on the same airframe?', status: 'closed', created_at: daysAgo(10, 11, 15), contactedGapHours: 8 },
+    { user_id: userIds.reader2, drone_id: null, message: 'We are a regional EMS provider evaluating VTOL delivery generally — could someone walk us through pricing and pilot-training requirements?', status: 'new', created_at: daysAgo(7, 18, 0) },
+    { user_id: userIds.reader3, drone_id: droneIds.hfp1, message: 'What is the warranty period on the HFP-1 airframe and sensor payload?', status: 'closed', created_at: daysAgo(6, 9, 30), contactedGapHours: 20 },
+    { user_id: userIds.reader6, drone_id: droneIds.hfp3, message: 'Do you have case studies from any police aviation units currently operating HFP-3?', status: 'contacted', created_at: daysAgo(2, 12, 0), contactedGapHours: 9 },
   ];
 
   for (const i of rows) {
+    const contactedAt = i.contactedGapHours != null ? hoursAfter(i.created_at, i.contactedGapHours) : null;
     await pool.query(
-      `INSERT INTO inquiries (user_id, drone_id, message, status)
-       VALUES ($1, $2, $3, $4)`,
-      [i.user_id, i.drone_id, i.message, i.status]
+      `INSERT INTO inquiries (user_id, drone_id, message, status, created_at, contacted_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [i.user_id, i.drone_id, i.message, i.status, i.created_at, contactedAt]
     );
   }
 }
@@ -273,47 +295,100 @@ async function seedCampaignLinks() {
 }
 
 async function seedNewsletterSubscribers(userIds) {
+  // subscribed_at is backdated alongside the matching campaign bump in
+  // seedActivityEvents so the referral funnel tells one consistent story.
   const rows = [
-    { email: 'newsletter1@example.com', referral_source: 'yt-launch', user_id: userIds.reader1 },
-    { email: 'newsletter2@example.com', referral_source: 'ig-teaser', user_id: null },
-    { email: 'newsletter3@example.com', referral_source: null, user_id: userIds.reader3 },
-    { email: 'newsletter4@example.com', referral_source: 'fb-demo-day', user_id: null },
-    { email: 'newsletter5@example.com', referral_source: 'yt-rescue-deepdive', user_id: null },
+    { email: 'newsletter3@example.com', referral_source: null, user_id: userIds.reader3, subscribed_at: daysAgo(26, 15, 0) },
+    { email: 'newsletter1@example.com', referral_source: 'yt-launch', user_id: userIds.reader1, subscribed_at: daysAgo(23, 20, 0) },
+    { email: 'newsletter4@example.com', referral_source: 'fb-demo-day', user_id: null, subscribed_at: daysAgo(14, 10, 30) },
+    { email: 'newsletter2@example.com', referral_source: 'ig-teaser', user_id: null, subscribed_at: daysAgo(5, 13, 0) },
+    { email: 'newsletter5@example.com', referral_source: 'yt-rescue-deepdive', user_id: null, subscribed_at: daysAgo(4, 18, 0) },
   ];
 
   for (const n of rows) {
     await pool.query(
-      `INSERT INTO newsletter_subscribers (email, referral_source, user_id)
-       VALUES ($1, $2, $3)`,
-      [n.email, n.referral_source, n.user_id]
+      `INSERT INTO newsletter_subscribers (email, referral_source, user_id, subscribed_at)
+       VALUES ($1, $2, $3, $4)`,
+      [n.email, n.referral_source, n.user_id, n.subscribed_at]
     );
   }
 }
 
+// Builds ~30 days of activity: a low, gently rising organic baseline plus three
+// 2-3 day bumps tied to the actual campaign_links slugs, so the time series and
+// the referral funnel tell the same story instead of everything landing on the
+// day the seed script happened to run.
 async function seedActivityEvents(userIds, droneIds, articleIds, campaignLinkIds) {
-  const rows = [
-    { user_id: null, anon_id: 'anon-001', event_type: 'view', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: 'ig-teaser' },
-    { user_id: null, anon_id: 'anon-002', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp2, referral_source: 'fb-demo-day' },
-    { user_id: userIds.reader1, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: null },
-    { user_id: userIds.reader1, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.vimanaLs, referral_source: null },
-    { user_id: userIds.reader1, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.hfp2, referral_source: null },
-    { user_id: null, anon_id: 'anon-003', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp1, referral_source: null },
-    { user_id: userIds.reader2, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.hfp1, referral_source: 'yt-launch' },
-    { user_id: userIds.reader2, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.hfp1, referral_source: null },
-    { user_id: null, anon_id: 'anon-004', event_type: 'view', target_type: 'drone', target_id: droneIds.hfp3, referral_source: null },
-    { user_id: null, anon_id: 'anon-005', event_type: 'view', target_type: 'drone', target_id: droneIds.vimana, referral_source: 'yt-rescue-deepdive' },
-    { user_id: userIds.reader3, anon_id: null, event_type: 'view', target_type: 'article', target_id: articleIds.ruralEmergency, referral_source: null },
-    { user_id: null, anon_id: 'anon-006', event_type: 'campaign_redirect', target_type: 'campaign_link', target_id: campaignLinkIds.ytLaunch, referral_source: 'yt-launch' },
-    { user_id: null, anon_id: 'anon-007', event_type: 'campaign_redirect', target_type: 'campaign_link', target_id: campaignLinkIds.igTeaser, referral_source: 'ig-teaser' },
-    { user_id: userIds.reader4, anon_id: null, event_type: 'view', target_type: 'drone', target_id: droneIds.hfp3, referral_source: null },
-    { user_id: userIds.reader5, anon_id: null, event_type: 'favorite', target_type: 'drone', target_id: droneIds.vimana, referral_source: null },
+  const droneCycle = [droneIds.vimanaLs, droneIds.hfp2, droneIds.hfp1, droneIds.hfp3, droneIds.vimana];
+  const articleCycle = [articleIds.ruralEmergency, articleIds.vimanaLsInside, articleIds.hfp2MedicalFlagship, articleIds.patrolAtRange];
+  const userCycle = [userIds.reader1, userIds.reader2, userIds.reader3, userIds.reader4, userIds.reader5, userIds.reader6];
+
+  const rows = [];
+  let anonSeq = 1;
+  let tick = 0;
+
+  function addEvent(day, eventType, targetType, targetId, referralSource, useAnon) {
+    const user_id = useAnon ? null : userCycle[tick % userCycle.length];
+    const anon_id = useAnon ? `anon-${String(anonSeq++).padStart(3, '0')}` : null;
+    // Spread same-day events across business hours (8:00-21:40) so timestamps within a day are distinct.
+    const created_at = daysAgo(day, 8 + (tick % 14), (tick * 17) % 60);
+    tick += 1;
+    rows.push({ user_id, anon_id, event_type: eventType, target_type: targetType, target_id: targetId, referral_source: referralSource, created_at });
+  }
+
+  // --- Baseline organic traffic: 1/day (days 20-29) -> 2/day (10-19) -> 3/day (0-9) ---
+  for (let day = 29; day >= 0; day--) {
+    const count = day >= 20 ? 1 : day >= 10 ? 2 : 3;
+    for (let n = 0; n < count; n++) {
+      const isFavorite = (day + n) % 4 === 3;
+      if (isFavorite) {
+        addEvent(day, 'favorite', 'drone', droneCycle[(day + n) % droneCycle.length], null, false);
+      } else {
+        const useArticle = (day + n) % 5 === 4;
+        const targetType = useArticle ? 'article' : 'drone';
+        const targetId = useArticle ? articleCycle[(day + n) % articleCycle.length] : droneCycle[(day + n) % droneCycle.length];
+        const useAnon = (day + n) % 3 !== 0;
+        addEvent(day, 'view', targetType, targetId, null, useAnon);
+      }
+    }
+  }
+
+  // --- Campaign bumps: peak day mixes campaign_redirect (the /r/:slug shape) with
+  // referral-tagged views; shoulder days are the trailing/leading tail of the same push. ---
+  const bumps = [
+    { day: 25, count: 2, ref: 'yt-launch' },
+    { day: 24, count: 9, ref: 'yt-launch', peak: true, campaignKey: 'ytLaunch' },
+    { day: 23, count: 4, ref: 'yt-launch' },
+    { day: 15, count: 2, ref: 'fb-demo-day' },
+    { day: 14, count: 10, ref: 'fb-demo-day', peak: true, campaignKey: 'fbDemoDay' },
+    { day: 13, count: 4, ref: 'fb-demo-day' },
+    { day: 6, count: 2, ref: 'ig-teaser' },
+    { day: 5, count: 8, ref: 'ig-teaser', peak: true, campaignKey: 'igTeaser' },
+    { day: 4, count: 8, ref: 'yt-rescue-deepdive', peak: true, campaignKey: 'ytRescueDeepdive' },
+    { day: 3, count: 3, ref: 'yt-rescue-deepdive' },
   ];
+
+  for (const bump of bumps) {
+    if (bump.peak) {
+      const redirectCount = Math.ceil(bump.count * 0.4);
+      for (let n = 0; n < redirectCount; n++) {
+        addEvent(bump.day, 'campaign_redirect', 'campaign_link', campaignLinkIds[bump.campaignKey], bump.ref, true);
+      }
+      for (let n = redirectCount; n < bump.count; n++) {
+        addEvent(bump.day, 'view', 'drone', droneCycle[n % droneCycle.length], bump.ref, n % 5 !== 0);
+      }
+    } else {
+      for (let n = 0; n < bump.count; n++) {
+        addEvent(bump.day, 'view', 'drone', droneCycle[n % droneCycle.length], bump.ref, n % 7 !== 6);
+      }
+    }
+  }
 
   for (const e of rows) {
     await pool.query(
-      `INSERT INTO activity_events (user_id, anon_id, event_type, target_type, target_id, referral_source)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [e.user_id, e.anon_id, e.event_type, e.target_type, e.target_id, e.referral_source]
+      `INSERT INTO activity_events (user_id, anon_id, event_type, target_type, target_id, referral_source, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [e.user_id, e.anon_id, e.event_type, e.target_type, e.target_id, e.referral_source, e.created_at]
     );
   }
 }

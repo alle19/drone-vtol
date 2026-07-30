@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { logView } from '../activity';
 
 export default function DroneDetail() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function DroneDetail() {
   const [creatingTestimonial, setCreatingTestimonial] = useState(false);
   const [testimonialForm, setTestimonialForm] = useState({ agency_name: '', contact_title: '', quote: '', outcome: '', featured: false });
   const [testimonialError, setTestimonialError] = useState('');
+  const loggedViewRef = useRef(false);
 
   function load() {
     api.getDrone(id).then(setDrone);
@@ -24,6 +26,13 @@ export default function DroneDetail() {
 
   useEffect(() => { load(); }, [id]);
   useEffect(() => { if (drone) setForm(drone); }, [drone]);
+
+  useEffect(() => {
+    if (drone && !loggedViewRef.current) {
+      loggedViewRef.current = true;
+      logView('drone', drone.id);
+    }
+  }, [drone]);
 
   if (!drone) return null;
 

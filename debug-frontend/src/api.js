@@ -71,3 +71,6 @@ export const getFavorites = () => request('/api/favorites');
 export const getLanding = () => request('/api/landing');
 
 export const subscribeNewsletter = (body) => request('/api/newsletter/subscribe', { method: 'POST', body: JSON.stringify(body) });
+
+export const getStats = () => request('/api/activity/stats');
+export const logEvent = (body) => request('/api/activity', { method: 'POST', body: JSON.stringify(body) });

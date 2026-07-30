@@ -12,6 +12,7 @@ import ArticleDetail from './pages/ArticleDetail.jsx';
 import Gallery from './pages/Gallery.jsx';
 import Favorites from './pages/Favorites.jsx';
 import Account from './pages/Account.jsx';
+import AdminStats from './pages/AdminStats.jsx';
 import { captureReferralSource } from './referral';
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/admin/stats" element={<AdminStats />} />
         </Routes>
       </main>
       <Footer />
